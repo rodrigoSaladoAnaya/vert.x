@@ -4805,7 +4805,7 @@ public class Http1xTest extends HttpTest {
         int[] length = {0};
         resp.handler(buff -> {
           length[0] += buff.length();
-          log.info("=====>> " + length[0] + " ---> " + (now - t1));
+          log.info("=====>> " + length[0] + " ---> " + (System.currentTimeMillis() - t1));
           resp.pause();
           vertx.setTimer(1, id -> {
             resp.resume();
@@ -4813,7 +4813,7 @@ public class Http1xTest extends HttpTest {
         });
         resp.exceptionHandler(this::fail);
         resp.endHandler(v -> {
-          log.info("Termina el proceso...." + " ---> " + (now - t1));
+          log.info("Termina el proceso...." + " ---> " + (System.currentTimeMillis() - t1));
           assertEquals(expected, length[0]);
           assertTrue(System.currentTimeMillis() - now > 1000);
           testComplete();
