@@ -4778,8 +4778,7 @@ public class Http1xTest extends HttpTest {
   @Test
   public void testHttpServerWithIdleTimeoutSendChunkedFile() throws Exception {
     // Does not pass reliably in CI (timeout)
-    // test 1
-    log.info("------ V1");
+    log.info("------ V2");
     Assume.assumeFalse(vertx.isNativeTransportEnabled());
     int expected = 16 * 1024 * 1024; // We estimate this will take more than 200ms to transfer with a 1ms pause in chunks
     File sent = TestUtils.tmpFile(".dat", expected);
@@ -4794,15 +4793,18 @@ public class Http1xTest extends HttpTest {
       .createHttpServer(createBaseServerOptions().setIdleTimeout(400).setIdleTimeoutUnit(TimeUnit.MILLISECONDS))
       .requestHandler(
         req -> {
+          log.info("Se manda el archivo...");
           req.response().sendFile(sent.getAbsolutePath());
         });
     startServer(testAddress);
     client.request(HttpMethod.GET, testAddress, DEFAULT_HTTP_PORT, DEFAULT_HTTP_HOST, "/")
       .setHandler(onSuccess(resp -> {
+        log.info("Se recibe respuesta del archivo mandado...");
         long now = System.currentTimeMillis();
         int[] length = {0};
         resp.handler(buff -> {
           length[0] += buff.length();
+          log.info("=====>> " + length[0]);
           resp.pause();
           vertx.setTimer(1, id -> {
             resp.resume();
@@ -4810,6 +4812,7 @@ public class Http1xTest extends HttpTest {
         });
         resp.exceptionHandler(this::fail);
         resp.endHandler(v -> {
+          log.info("Termina el proceso....");
           assertEquals(expected, length[0]);
           assertTrue(System.currentTimeMillis() - now > 1000);
           testComplete();
