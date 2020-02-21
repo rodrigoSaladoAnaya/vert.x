@@ -4805,12 +4805,14 @@ public class Http1xTest extends HttpTest {
         resp.exceptionHandler(e -> {
           countDownLatch.countDown();
           testComplete();
+          log.info("Fallo prueba en -> " + (System.currentTimeMillis() - ts));
         });
         resp.endHandler(v -> {
           assertEquals(expected, length[0]);
           assertTrue(System.currentTimeMillis() - now > 1000);
           testComplete();
           countDownLatch.countDown();
+          log.info("Termino prueba en -> " + (System.currentTimeMillis() - ts));
         });
       }))
       .end();
