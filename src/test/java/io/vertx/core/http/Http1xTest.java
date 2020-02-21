@@ -4778,7 +4778,11 @@ public class Http1xTest extends HttpTest {
     Assume.assumeFalse(vertx.isNativeTransportEnabled());
     int expected = 16 * 1024 * 1024; // We estimate this will take more than 200ms to transfer with a 1ms pause in chunks
     File sent = TestUtils.tmpFile(".dat", expected);
-    server.close();
+    CountDownLatch waitToClose = new CountDownLatch(1);
+    server.close().onSuccess(event -> {
+      waitToClose.countDown();
+    });
+    waitToClose.await();
     server = vertx
       .createHttpServer(createBaseServerOptions().setIdleTimeout(400).setIdleTimeoutUnit(TimeUnit.MILLISECONDS))
       .requestHandler(
