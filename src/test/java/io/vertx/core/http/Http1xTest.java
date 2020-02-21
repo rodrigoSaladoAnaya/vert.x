@@ -4792,7 +4792,7 @@ public class Http1xTest extends HttpTest {
       waitToClose.await();
       log.info("=====>> inicia proceso de prueba..."+ " ---> " + (System.currentTimeMillis() - t1));
       server = vertx
-        .createHttpServer(createBaseServerOptions().setIdleTimeout(1).setIdleTimeoutUnit(TimeUnit.MILLISECONDS))
+        .createHttpServer(createBaseServerOptions().setIdleTimeout(20).setIdleTimeoutUnit(TimeUnit.MILLISECONDS))
         .requestHandler(
           req -> {
             log.info("=====>> Se manda el archivo..."+ " ---> " + (System.currentTimeMillis() - t1));
