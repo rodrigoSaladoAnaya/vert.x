@@ -4780,7 +4780,7 @@ public class Http1xTest extends HttpTest {
     try {
       // Does not pass reliably in CI (timeout)
       long t1 = System.currentTimeMillis();
-      log.info("------ V3 " + t1);
+      log.info("------ V4 " + t1);
       Assume.assumeFalse(vertx.isNativeTransportEnabled());
       int expected = 16 * 1024 * 1024; // We estimate this will take more than 200ms to transfer with a 1ms pause in chunks
       File sent = TestUtils.tmpFile(".dat", expected);
