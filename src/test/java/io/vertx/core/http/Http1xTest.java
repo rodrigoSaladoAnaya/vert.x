@@ -4825,8 +4825,8 @@ public class Http1xTest extends HttpTest {
       await();
 
     } catch (RuntimeException ex) {
-      log.error(".............................");
-      log.error(ex);
+      log.error("............................." + ex.getLocalizedMessage());
+      ex.printStackTrace();
     }/**/
   }
 
