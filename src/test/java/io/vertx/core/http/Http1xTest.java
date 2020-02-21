@@ -4780,7 +4780,7 @@ public class Http1xTest extends HttpTest {
     // Does not pass reliably in CI (timeout)
     long ts = System.currentTimeMillis();
     try {
-      CountDownLatch countDownLatch = new CountDownLatch(1);
+      //CountDownLatch countDownLatch = new CountDownLatch(1);
       Assume.assumeFalse(vertx.isNativeTransportEnabled());
       int expected = 16 * 1024 * 1024; // We estimate this will take more than 200ms to transfer with a 1ms pause in chunks
       File sent = TestUtils.tmpFile(".dat", expected);
@@ -4804,23 +4804,23 @@ public class Http1xTest extends HttpTest {
             });
           });
           resp.exceptionHandler(e -> {
-            countDownLatch.countDown();
-            testComplete();
+            //countDownLatch.countDown();
+            //testComplete();
             log.info("Fallo prueba en -> " + (System.currentTimeMillis() - ts));
+            log.error(">>>>> T", e);
           });
           resp.endHandler(v -> {
             assertEquals(expected, length[0]);
             assertTrue(System.currentTimeMillis() - now > 1000);
             testComplete();
-            countDownLatch.countDown();
+            //countDownLatch.countDown();
             log.info("Termino prueba en -> " + (System.currentTimeMillis() - ts));
           });
         }))
         .end();
-      countDownLatch.await(20, TimeUnit.MINUTES);
+      await();
     } finally {
-      log.info(">>>>> T-1.1 " + (System.currentTimeMillis() - ts));
-
+      log.info(">>>>> T " + (System.currentTimeMillis() - ts));
     }
   }
 
