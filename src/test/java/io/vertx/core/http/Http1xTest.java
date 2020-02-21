@@ -4777,10 +4777,10 @@ public class Http1xTest extends HttpTest {
   private static final Logger log = LoggerFactory.getLogger(Http1xTest.class);
   @Test
   public void testHttpServerWithIdleTimeoutSendChunkedFile() throws Exception {
-    try {
+    //try {
       // Does not pass reliably in CI (timeout)
       long t1 = System.currentTimeMillis();
-      log.info("------ V2 " + t1);
+      log.info("------ V3 " + t1);
       Assume.assumeFalse(vertx.isNativeTransportEnabled());
       int expected = 16 * 1024 * 1024; // We estimate this will take more than 200ms to transfer with a 1ms pause in chunks
       File sent = TestUtils.tmpFile(".dat", expected);
@@ -4824,9 +4824,10 @@ public class Http1xTest extends HttpTest {
       log.info("=====>> WAIT...." + " ---> " + (System.currentTimeMillis() - t1));
       await();
 
-    } catch (RuntimeException ex) {
+    /*} catch (RuntimeException ex) {
+      log.error(".............................");
       log.error(ex);
-    }
+    }/**/
   }
 
   @Test
