@@ -4792,38 +4792,39 @@ public class Http1xTest extends HttpTest {
       waitToClose.await();
       log.info("=====>> inicia proceso de prueba..."+ " ---> " + (System.currentTimeMillis() - t1));
       server = vertx
-        .createHttpServer(createBaseServerOptions().setIdleTimeout(10).setIdleTimeoutUnit(TimeUnit.MILLISECONDS))
+        .createHttpServer(createBaseServerOptions().setIdleTimeout(400).setIdleTimeoutUnit(TimeUnit.MILLISECONDS))
         .requestHandler(
           req -> {
             log.info("=====>> Se manda el archivo..."+ " ---> " + (System.currentTimeMillis() - t1));
             req.response().sendFile(sent.getAbsolutePath());
           });
       startServer(testAddress);
+      long tc1 = System.currentTimeMillis();
       client.request(HttpMethod.GET, testAddress, DEFAULT_HTTP_PORT, DEFAULT_HTTP_HOST, "/")
         .setHandler(onSuccess(resp -> {
-          log.info("=====>> Se recibe respuesta del archivo mandado..."+ " ---> " + (System.currentTimeMillis() - t1));
+          log.info("=====>> Se recibe respuesta del archivo mandado..."+ " ---> " + (System.currentTimeMillis() - tc1));
           long now = System.currentTimeMillis();
           int[] length = {0};
           resp.handler(buff -> {
             length[0] += buff.length();
-            log.info("=====>> " + length[0] + " ---> " + (System.currentTimeMillis() - t1));
+            log.info("=====>> " + length[0] + " ---> " + (System.currentTimeMillis() - tc1));
             resp.pause();
             vertx.setTimer(1, id -> {
               resp.resume();
             });
           });
           resp.exceptionHandler(ex -> {
-            log.error("=====>> Algo paso mal ", ex);
+            log.error("=====>> Algo paso mal " + " ---> " + (System.currentTimeMillis() - tc1), ex);
           });
           resp.endHandler(v -> {
-            log.info("=====>> Termina el proceso...." + " ---> " + (System.currentTimeMillis() - t1));
+            log.info("=====>> Termina el proceso...." + " ---> " + (System.currentTimeMillis() - tc1));
             assertEquals(expected, length[0]);
             assertTrue(System.currentTimeMillis() - now > 1000);
             testComplete();
           });
         }))
         .end();
-      log.info("=====>> WAIT...." + " ---> " + (System.currentTimeMillis() - t1));
+      log.info("=====>> WAIT...." + " ---> " + (System.currentTimeMillis() - tc1));
       await();
 
     } catch (RuntimeException ex) {
