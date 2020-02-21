@@ -4786,21 +4786,21 @@ public class Http1xTest extends HttpTest {
     CountDownLatch waitToClose = new CountDownLatch(1);
     server.close().onSuccess(event -> {
       waitToClose.countDown();
-      log.info("Se cierra el server");
+      log.info("=====>> Se cierra el server"+ " ---> " + (System.currentTimeMillis() - t1));
     });
     waitToClose.await();
-    log.info("inicia proceso de prueba...");
+    log.info("=====>> inicia proceso de prueba..."+ " ---> " + (System.currentTimeMillis() - t1));
     server = vertx
       .createHttpServer(createBaseServerOptions().setIdleTimeout(400).setIdleTimeoutUnit(TimeUnit.MILLISECONDS))
       .requestHandler(
         req -> {
-          log.info("Se manda el archivo...");
+          log.info("=====>> Se manda el archivo..."+ " ---> " + (System.currentTimeMillis() - t1));
           req.response().sendFile(sent.getAbsolutePath());
         });
     startServer(testAddress);
     client.request(HttpMethod.GET, testAddress, DEFAULT_HTTP_PORT, DEFAULT_HTTP_HOST, "/")
       .setHandler(onSuccess(resp -> {
-        log.info("Se recibe respuesta del archivo mandado...");
+        log.info("=====>> Se recibe respuesta del archivo mandado..."+ " ---> " + (System.currentTimeMillis() - t1));
         long now = System.currentTimeMillis();
         int[] length = {0};
         resp.handler(buff -> {
@@ -4813,13 +4813,14 @@ public class Http1xTest extends HttpTest {
         });
         resp.exceptionHandler(this::fail);
         resp.endHandler(v -> {
-          log.info("Termina el proceso...." + " ---> " + (System.currentTimeMillis() - t1));
+          log.info("=====>> Termina el proceso...." + " ---> " + (System.currentTimeMillis() - t1));
           assertEquals(expected, length[0]);
           assertTrue(System.currentTimeMillis() - now > 1000);
           testComplete();
         });
       }))
       .end();
+    log.info("=====>> WAIT...." + " ---> " + (System.currentTimeMillis() - t1));
     await();
   }
 
