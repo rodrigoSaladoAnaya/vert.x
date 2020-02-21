@@ -4779,45 +4779,49 @@ public class Http1xTest extends HttpTest {
   public void testHttpServerWithIdleTimeoutSendChunkedFile() throws Exception {
     // Does not pass reliably in CI (timeout)
     long ts = System.currentTimeMillis();
-    CountDownLatch countDownLatch = new CountDownLatch(1);
-    Assume.assumeFalse(vertx.isNativeTransportEnabled());
-    int expected = 16 * 1024 * 1024; // We estimate this will take more than 200ms to transfer with a 1ms pause in chunks
-    File sent = TestUtils.tmpFile(".dat", expected);
-    server.close();
-    server = vertx
-      .createHttpServer(createBaseServerOptions().setIdleTimeout(400).setIdleTimeoutUnit(TimeUnit.MILLISECONDS))
-      .requestHandler(
-        req -> {
-          req.response().sendFile(sent.getAbsolutePath());
-        });
-    startServer(testAddress);
-    client.request(HttpMethod.GET, testAddress, DEFAULT_HTTP_PORT, DEFAULT_HTTP_HOST, "/")
-      .setHandler(onSuccess(resp -> {
-        long now = System.currentTimeMillis();
-        int[] length = {0};
-        resp.handler(buff -> {
-          length[0] += buff.length();
-          resp.pause();
-          vertx.setTimer(1, id -> {
-            resp.resume();
+    try {
+      CountDownLatch countDownLatch = new CountDownLatch(1);
+      Assume.assumeFalse(vertx.isNativeTransportEnabled());
+      int expected = 16 * 1024 * 1024; // We estimate this will take more than 200ms to transfer with a 1ms pause in chunks
+      File sent = TestUtils.tmpFile(".dat", expected);
+      server.close();
+      server = vertx
+        .createHttpServer(createBaseServerOptions().setIdleTimeout(400).setIdleTimeoutUnit(TimeUnit.MILLISECONDS))
+        .requestHandler(
+          req -> {
+            req.response().sendFile(sent.getAbsolutePath());
           });
-        });
-        resp.exceptionHandler(e -> {
-          countDownLatch.countDown();
-          testComplete();
-          log.info("Fallo prueba en -> " + (System.currentTimeMillis() - ts));
-        });
-        resp.endHandler(v -> {
-          assertEquals(expected, length[0]);
-          assertTrue(System.currentTimeMillis() - now > 1000);
-          testComplete();
-          countDownLatch.countDown();
-          log.info("Termino prueba en -> " + (System.currentTimeMillis() - ts));
-        });
-      }))
-      .end();
-    countDownLatch.await(20, TimeUnit.MINUTES);
-    log.info(">>>>> T1 " + (System.currentTimeMillis() - ts));
+      startServer(testAddress);
+      client.request(HttpMethod.GET, testAddress, DEFAULT_HTTP_PORT, DEFAULT_HTTP_HOST, "/")
+        .setHandler(onSuccess(resp -> {
+          long now = System.currentTimeMillis();
+          int[] length = {0};
+          resp.handler(buff -> {
+            length[0] += buff.length();
+            resp.pause();
+            vertx.setTimer(1, id -> {
+              resp.resume();
+            });
+          });
+          resp.exceptionHandler(e -> {
+            countDownLatch.countDown();
+            testComplete();
+            log.info("Fallo prueba en -> " + (System.currentTimeMillis() - ts));
+          });
+          resp.endHandler(v -> {
+            assertEquals(expected, length[0]);
+            assertTrue(System.currentTimeMillis() - now > 1000);
+            testComplete();
+            countDownLatch.countDown();
+            log.info("Termino prueba en -> " + (System.currentTimeMillis() - ts));
+          });
+        }))
+        .end();
+      countDownLatch.await(20, TimeUnit.MINUTES);
+    } finally {
+      log.info(">>>>> T-1.1 " + (System.currentTimeMillis() - ts));
+
+    }
   }
 
   @Test
