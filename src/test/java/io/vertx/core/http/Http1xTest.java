@@ -4812,7 +4812,9 @@ public class Http1xTest extends HttpTest {
               resp.resume();
             });
           });
-          resp.exceptionHandler(this::fail);
+          resp.exceptionHandler(ex -> {
+            log.error("=====>> Algo paso mal ", ex);
+          });
           resp.endHandler(v -> {
             log.info("=====>> Termina el proceso...." + " ---> " + (System.currentTimeMillis() - t1));
             assertEquals(expected, length[0]);
@@ -4825,8 +4827,7 @@ public class Http1xTest extends HttpTest {
       await();
 
     } catch (RuntimeException ex) {
-      log.error("............................." + ex.getLocalizedMessage());
-      log.error(ex);
+      log.error(".............................", ex);
     }/**/
   }
 
