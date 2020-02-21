@@ -4778,6 +4778,7 @@ public class Http1xTest extends HttpTest {
   @Test
   public void testHttpServerWithIdleTimeoutSendChunkedFile() throws Exception {
     // Does not pass reliably in CI (timeout)
+    CountDownLatch countDownLatch = new CountDownLatch(1);
     Assume.assumeFalse(vertx.isNativeTransportEnabled());
     int expected = 16 * 1024 * 1024; // We estimate this will take more than 200ms to transfer with a 1ms pause in chunks
     File sent = TestUtils.tmpFile(".dat", expected);
@@ -4805,10 +4806,11 @@ public class Http1xTest extends HttpTest {
           assertEquals(expected, length[0]);
           assertTrue(System.currentTimeMillis() - now > 1000);
           testComplete();
+          countDownLatch.countDown();
         });
       }))
       .end();
-    await();
+    countDownLatch.await(2, TimeUnit.MINUTES);
   }
 
   @Test
