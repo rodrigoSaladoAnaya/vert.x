@@ -4813,7 +4813,7 @@ public class Http1xTest extends HttpTest {
         });
       }))
       .end();
-    countDownLatch.await(2, TimeUnit.MINUTES);
+    countDownLatch.await(20, TimeUnit.MINUTES);
   }
 
   @Test
