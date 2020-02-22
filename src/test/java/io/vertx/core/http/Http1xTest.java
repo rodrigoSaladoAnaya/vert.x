@@ -4793,11 +4793,17 @@ public class Http1xTest extends HttpTest {
           });
       startServer(testAddress);
       client.request(HttpMethod.GET, testAddress, DEFAULT_HTTP_PORT, DEFAULT_HTTP_HOST, "/")
+        /*.setHandler(response -> {
+          response.result().handler()
+        })/**/
+
+
         .setHandler(onSuccess(resp -> {
           long now = System.currentTimeMillis();
           int[] length = {0};
           resp.handler(buff -> {
             length[0] += buff.length();
+            log.info(">>>>> T (" + buff.length() +") " + (System.currentTimeMillis() - ts));
             resp.pause();
             vertx.setTimer(1, id -> {
               resp.resume();
@@ -4807,7 +4813,8 @@ public class Http1xTest extends HttpTest {
             //countDownLatch.countDown();
             //testComplete();
             log.info("Fallo prueba en -> " + (System.currentTimeMillis() - ts));
-            log.error(">>>>> T", e);
+            log.error(">>>>> T ERROR", e);
+            log.info(">>>>> T server.actualPort(): " + server.actualPort());
           });
           resp.endHandler(v -> {
             assertEquals(expected, length[0]);
@@ -4820,7 +4827,7 @@ public class Http1xTest extends HttpTest {
         .end();
       await();
     } finally {
-      log.info(">>>>> T " + (System.currentTimeMillis() - ts));
+      log.info(">>>>> T FIN " + (System.currentTimeMillis() - ts));
     }
   }
 
