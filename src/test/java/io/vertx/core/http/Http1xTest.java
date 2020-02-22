@@ -4787,26 +4787,31 @@ public class Http1xTest extends HttpTest {
 
 
 
-    CountDownLatch onClose = new CountDownLatch(1);
+/*    CountDownLatch onClose = new CountDownLatch(1);
     Future<Void> close = server.close();
     close.onComplete(v -> {
       onClose.countDown();
     });
     onClose.await();
-
+/**/
 
 log.info("TEST ....... " + test);
+    HttpServerOptions httpServerOptions = createBaseServerOptions()
+      .setIdleTimeout(400)
+      .setIdleTimeoutUnit(TimeUnit.MILLISECONDS)
+      .setPort(9056);
 
-    server = vertx
-      .createHttpServer(createBaseServerOptions().setIdleTimeout(400).setIdleTimeoutUnit(TimeUnit.MILLISECONDS))
+
+    HttpServer httpServer = vertx
+      .createHttpServer(httpServerOptions)
       .requestHandler(
         req -> {
           req.response().sendFile(sent.getAbsolutePath());
         });
-    startServer(testAddress);
+    startServer(testAddress, httpServer);
 
     log.info("---- > "+test+" " + server.actualPort());
-    client.request(HttpMethod.GET, testAddress, DEFAULT_HTTP_PORT, DEFAULT_HTTP_HOST, "/")
+    client.request(HttpMethod.GET, testAddress, 9056, DEFAULT_HTTP_HOST, "/")
       .setHandler(onSuccess(resp -> {
         long now = System.currentTimeMillis();
         int[] length = {0};
