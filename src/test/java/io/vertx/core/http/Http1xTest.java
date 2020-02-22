@@ -4805,6 +4805,7 @@ public class Http1xTest extends HttpTest {
         int[] length = {0};
         resp.handler(buff -> {
           length[0] += buff.length();
+          log.info("resp.handler -> " + server.actualPort() + ", " + buff.length());
           resp.pause();
           vertx.setTimer(1, id -> {
             resp.resume();
