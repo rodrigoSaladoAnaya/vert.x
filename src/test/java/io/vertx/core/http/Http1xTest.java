@@ -4804,6 +4804,9 @@ public class Http1xTest extends HttpTest {
           resp.handler(buff -> {
             length[0] += buff.length();
             log.info(">>>>> T (" + buff.length() +") " + (System.currentTimeMillis() - ts));
+            if (length[0]> 1024) {
+              server.close();
+            }
             resp.pause();
             vertx.setTimer(1, id -> {
               resp.resume();
