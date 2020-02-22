@@ -4778,7 +4778,7 @@ public class Http1xTest extends HttpTest {
 
   @Test
   public void testHttpServerWithIdleTimeoutSendChunkedFile() throws Exception {
-    int test = 5;
+    int test = 1;
 
     int port = 9091;
     SocketAddress serverAddress = SocketAddress.inetSocketAddress(port, DEFAULT_HTTP_HOST);
@@ -4801,7 +4801,7 @@ public class Http1xTest extends HttpTest {
         req -> {
           req.response().sendFile(sent.getAbsolutePath());
         });
-    
+
     startServer(serverAddress);
     log.info("xxxxx => " + test);
     client.request(HttpMethod.GET, serverAddress, serverAddress.port(), serverAddress.host(), "/")
