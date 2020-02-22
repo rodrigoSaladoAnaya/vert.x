@@ -95,7 +95,6 @@ class ConnectionHolder {
   }
 
   void close() {
-    log.info("9.....");
     close(ConnectionBase.CLOSED_EXCEPTION);
   }
 

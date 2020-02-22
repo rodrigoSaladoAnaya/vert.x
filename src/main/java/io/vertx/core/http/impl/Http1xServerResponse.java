@@ -604,7 +604,6 @@ public class Http1xServerResponse implements HttpServerResponse {
   }
 
   void handleException(Throwable t) {
-    log.info("6.....");
     if (t == Http1xServerConnection.CLOSED_EXCEPTION) {
       handleClosed();
     } else {
@@ -633,7 +632,6 @@ public class Http1xServerResponse implements HttpServerResponse {
       closedHandler = this.closeHandler;
     }
     if (exceptionHandler != null) {
-      log.info("8.....");
       context.emit(ConnectionBase.CLOSED_EXCEPTION, exceptionHandler);
     }
     if (endHandler != null) {

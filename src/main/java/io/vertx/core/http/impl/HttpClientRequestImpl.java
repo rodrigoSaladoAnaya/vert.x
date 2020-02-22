@@ -83,7 +83,6 @@ public class HttpClientRequestImpl extends HttpClientRequestBase implements Http
 
   @Override
   void handleException(Throwable t) {
-    log.info("3.1.....");
     super.handleException(t);
     Handler<Throwable> handler;
     synchronized (this) {

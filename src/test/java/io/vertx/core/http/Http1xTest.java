@@ -19,14 +19,11 @@ import io.vertx.core.http.impl.HttpUtils;
 import io.vertx.core.impl.ConcurrentHashSet;
 import io.vertx.core.impl.ContextInternal;
 import io.vertx.core.impl.VertxInternal;
-import io.vertx.core.impl.logging.Logger;
-import io.vertx.core.impl.logging.LoggerFactory;
 import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
 import io.vertx.core.net.*;
 import io.vertx.core.parsetools.RecordParser;
 import io.vertx.core.streams.WriteStream;
-import io.vertx.test.core.AsyncTestBase;
 import io.vertx.test.core.Repeat;
 import io.vertx.test.core.CheckingSender;
 import io.vertx.test.verticles.SimpleServer;
@@ -4774,64 +4771,40 @@ public class Http1xTest extends HttpTest {
     });
   }
 
-  private static final Logger log = LoggerFactory.getLogger(Http1xTest.class);
   @Test
   public void testHttpServerWithIdleTimeoutSendChunkedFile() throws Exception {
     // Does not pass reliably in CI (timeout)
-    long ts = System.currentTimeMillis();
-    try {
-      //CountDownLatch countDownLatch = new CountDownLatch(1);
-      Assume.assumeFalse(vertx.isNativeTransportEnabled());
-      int expected = 16 * 1024 * 1024; // We estimate this will take more than 200ms to transfer with a 1ms pause in chunks
-      File sent = TestUtils.tmpFile(".dat", expected);
-      //server.close();
-      server = vertx
-        .createHttpServer(createBaseServerOptions().setIdleTimeout(400).setIdleTimeoutUnit(TimeUnit.MILLISECONDS))
-        .requestHandler(
-          req -> {
-            req.response().sendFile(sent.getAbsolutePath());
+    Assume.assumeFalse(vertx.isNativeTransportEnabled());
+    int expected = 16 * 1024 * 1024; // We estimate this will take more than 200ms to transfer with a 1ms pause in chunks
+    File sent = TestUtils.tmpFile(".dat", expected);
+    server.close();
+    server = vertx
+      .createHttpServer(createBaseServerOptions().setIdleTimeout(400).setIdleTimeoutUnit(TimeUnit.MILLISECONDS))
+      .requestHandler(
+        req -> {
+          req.response().sendFile(sent.getAbsolutePath());
+        });
+    startServer(testAddress);
+    client.request(HttpMethod.GET, testAddress, DEFAULT_HTTP_PORT, DEFAULT_HTTP_HOST, "/")
+      .setHandler(onSuccess(resp -> {
+        long now = System.currentTimeMillis();
+        int[] length = {0};
+        resp.handler(buff -> {
+          length[0] += buff.length();
+          resp.pause();
+          vertx.setTimer(1, id -> {
+            resp.resume();
           });
-      startServer(testAddress);
-      client.request(HttpMethod.GET, testAddress, DEFAULT_HTTP_PORT, DEFAULT_HTTP_HOST, "/")
-        /*.setHandler(response -> {
-          response.result().handler()
-        })/**/
-
-
-        .setHandler(onSuccess(resp -> {
-          long now = System.currentTimeMillis();
-          int[] length = {0};
-          resp.handler(buff -> {
-            length[0] += buff.length();
-            log.info(">>>>> T (" + buff.length() +") " + (System.currentTimeMillis() - ts));
-            if (length[0]> 1024) {
-              server.close();
-            }
-            resp.pause();
-            vertx.setTimer(1, id -> {
-              resp.resume();
-            });
-          });
-          resp.exceptionHandler(e -> {
-            //countDownLatch.countDown();
-            //testComplete();
-            log.info("Fallo prueba en -> " + (System.currentTimeMillis() - ts));
-            log.error(">>>>> T ERROR", e);
-            log.info(">>>>> T server.actualPort(): " + server.actualPort());
-          });
-          resp.endHandler(v -> {
-            assertEquals(expected, length[0]);
-            assertTrue(System.currentTimeMillis() - now > 1000);
-            testComplete();
-            //countDownLatch.countDown();
-            log.info("Termino prueba en -> " + (System.currentTimeMillis() - ts));
-          });
-        }))
-        .end();
-      await();
-    } finally {
-      log.info(">>>>> T FIN " + (System.currentTimeMillis() - ts));
-    }
+        });
+        resp.exceptionHandler(this::fail);
+        resp.endHandler(v -> {
+          assertEquals(expected, length[0]);
+          assertTrue(System.currentTimeMillis() - now > 1000);
+          testComplete();
+        });
+      }))
+      .end();
+    await();
   }
 
   @Test

@@ -420,13 +420,11 @@ public class Http1xServerConnection extends Http1xConnectionBase<ServerWebSocket
     }
     if (requestInProgress != null) {
       requestInProgress.context.schedule(v -> {
-        log.info("1.....");
         requestInProgress.handleException(CLOSED_EXCEPTION);
       });
     }
     if (responseInProgress != null && responseInProgress != requestInProgress) {
       responseInProgress.context.schedule(v -> {
-        log.info("2.....");
         responseInProgress.handleException(CLOSED_EXCEPTION);
       });
     }

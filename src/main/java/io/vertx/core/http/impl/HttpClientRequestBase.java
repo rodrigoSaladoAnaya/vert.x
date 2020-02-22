@@ -19,8 +19,6 @@ import io.vertx.core.http.HttpClientResponse;
 import io.vertx.core.http.HttpMethod;
 import io.vertx.core.http.StreamResetException;
 import io.vertx.core.impl.ContextInternal;
-import io.vertx.core.impl.logging.Logger;
-import io.vertx.core.impl.logging.LoggerFactory;
 import io.vertx.core.net.SocketAddress;
 
 /**
@@ -104,16 +102,12 @@ public abstract class HttpClientRequestBase implements HttpClientRequest {
     return this;
   }
 
-  private static final Logger log = LoggerFactory.getLogger(HttpClientRequestBase.class);
   void handleException(Throwable t) {
-    log.info("3.2.....");
     fail(t);
   }
 
   void fail(Throwable t) {
-    log.info("3.3.....");
     cancelTimeout();
-    log.info("3.3.....");
     responsePromise.tryFail(t);
     HttpClientResponseImpl response = (HttpClientResponseImpl) responsePromise.future().result();
     if (response != null) {
@@ -128,11 +122,8 @@ public abstract class HttpClientRequestBase implements HttpClientRequest {
   abstract void handleResponse(Promise<HttpClientResponse> promise, HttpClientResponse resp, long timeoutMs);
 
   private synchronized long cancelTimeout() {
-    log.info("3.3.1.....");
     long ret;
-    log.info("3.3.2.....");
     if ((ret = currentTimeoutTimerId) != -1) {
-      log.info("3.3.3.....");
       client.getVertx().cancelTimer(currentTimeoutTimerId);
       currentTimeoutTimerId = -1;
       ret = currentTimeoutMs;
