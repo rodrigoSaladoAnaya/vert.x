@@ -4785,7 +4785,7 @@ public class Http1xTest extends HttpTest {
 
 
 
-    CountDownLatch onClose = new CountDownLatch(1);
+    /*CountDownLatch onClose = new CountDownLatch(1);
     vertx.getOrCreateContext().runOnContext(v -> {
       server.close()
         .onComplete(result -> {
@@ -4795,7 +4795,9 @@ public class Http1xTest extends HttpTest {
       server = null;
     });
     onClose.await();
+/**/
 
+    stopServer();
 
 
 

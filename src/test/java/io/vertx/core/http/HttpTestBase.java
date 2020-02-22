@@ -127,6 +127,50 @@ public class HttpTestBase extends VertxTestBase {
     awaitLatch(latch);
   }
 
+
+  //================
+
+  protected void stopServer() throws Exception {
+    stopServer(vertx.getOrCreateContext());
+  }
+
+  protected void stopServer(SocketAddress bindAddress) throws Exception {
+    stopServer(bindAddress, vertx.getOrCreateContext());
+  }
+
+  protected void stopServer(HttpServer server) throws Exception {
+    stopServer(vertx.getOrCreateContext(), server);
+  }
+
+  protected void stopServer(SocketAddress bindAddress, HttpServer server) throws Exception {
+    stopServer(bindAddress, vertx.getOrCreateContext(), server);
+  }
+
+  protected void stopServer(Context context) throws Exception {
+    stopServer(context, server);
+  }
+
+  protected void stopServer(SocketAddress bindAddress, Context context) throws Exception {
+    stopServer(bindAddress, context, server);
+  }
+
+  protected void stopServer(Context context, HttpServer server) throws Exception {
+    stopServer(null, context, server);
+  }
+
+  protected void stopServer(SocketAddress bindAddress, Context context, HttpServer server) throws Exception {
+    CountDownLatch latch = new CountDownLatch(1);
+    context.runOnContext(v -> {
+      Handler<AsyncResult<HttpServer>> onListen = onSuccess(s -> latch.countDown());
+      server.close(onSuccess(s -> {
+        latch.countDown();
+      }));
+    });
+    latch.await();
+  }
+
+  //================
+
   protected void startProxy(String username, ProxyType proxyType) throws Exception {
     if (proxyType == ProxyType.HTTP) {
       proxy = new HttpProxy(username);
