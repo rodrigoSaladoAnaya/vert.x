@@ -19,11 +19,14 @@ import io.vertx.core.http.impl.HttpUtils;
 import io.vertx.core.impl.ConcurrentHashSet;
 import io.vertx.core.impl.ContextInternal;
 import io.vertx.core.impl.VertxInternal;
+import io.vertx.core.impl.logging.Logger;
+import io.vertx.core.impl.logging.LoggerFactory;
 import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
 import io.vertx.core.net.*;
 import io.vertx.core.parsetools.RecordParser;
 import io.vertx.core.streams.WriteStream;
+import io.vertx.test.core.AsyncTestBase;
 import io.vertx.test.core.Repeat;
 import io.vertx.test.core.CheckingSender;
 import io.vertx.test.verticles.SimpleServer;
@@ -4771,6 +4774,8 @@ public class Http1xTest extends HttpTest {
     });
   }
 
+  private static final Logger log = LoggerFactory.getLogger(Http1xTest.class);
+
   @Test
   public void testHttpServerWithIdleTimeoutSendChunkedFile() throws Exception {
     //test runOnContext 10
@@ -4781,9 +4786,22 @@ public class Http1xTest extends HttpTest {
 
 
 
+log.info("...... Current port : " +  server.actualPort());
+//if(server.actualPort() != 0) {
+  CountDownLatch onClose = new CountDownLatch(1);
+  vertx.getOrCreateContext().runOnContext(v -> {
+    server.close()
+      .onComplete(result -> {
+        assertTrue(result.succeeded());
+        onClose.countDown();
+      });
+    server = null;
+  });
+  onClose.await();
+//}
 
 
-
+log.info("SERVER === " + server);
 
     /*CountDownLatch onClose = new CountDownLatch(1);
     vertx.getOrCreateContext().runOnContext(v -> {
@@ -4812,6 +4830,8 @@ public class Http1xTest extends HttpTest {
           req.response().sendFile(sent.getAbsolutePath());
         });
     startServer(testAddress);
+
+    log.info("---- > " + server.actualPort());
     client.request(HttpMethod.GET, testAddress, DEFAULT_HTTP_PORT, DEFAULT_HTTP_HOST, "/")
       .setHandler(onSuccess(resp -> {
         long now = System.currentTimeMillis();
