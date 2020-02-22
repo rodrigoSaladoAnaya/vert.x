@@ -468,6 +468,7 @@ class Http1xClientConnection extends Http1xConnectionBase<WebSocketImpl> impleme
 
     @Override
     void handleClosed() {
+      log.info("3.....");
       handleException(CLOSED_EXCEPTION);
     }
   }
@@ -829,6 +830,7 @@ class Http1xClientConnection extends Http1xConnectionBase<WebSocketImpl> impleme
       streams = pendingStreams();
     }
     if (netSocketPromise != null) {
+      log.info("4.....");
       netSocketPromise.fail(ConnectionBase.CLOSED_EXCEPTION);
     }
     if (ws != null) {
@@ -839,6 +841,7 @@ class Http1xClientConnection extends Http1xConnectionBase<WebSocketImpl> impleme
         metrics.requestReset(stream.metric);
       }
       if (tracer != null) {
+        log.info("5.....");
         tracer.receiveResponse(stream.context, null, stream.trace, ConnectionBase.CLOSED_EXCEPTION, TagExtractor.empty());
       }
       stream.context.schedule(null, v -> stream.handleClosed());
