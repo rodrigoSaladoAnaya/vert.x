@@ -4779,7 +4779,7 @@ public class Http1xTest extends HttpTest {
   @Test
   public void testHttpServerWithIdleTimeoutSendChunkedFile() throws Exception {
     Assume.assumeFalse(vertx.isNativeTransportEnabled());
-    int test = 3;
+    int test = 4;
     final int port = 9091;
     final SocketAddress serverAddress = SocketAddress.inetSocketAddress(port, DEFAULT_HTTP_HOST);
     int expected = 16 * 1024 * 1024; // We estimate this will take more than 200ms to transfer with a 1ms pause in chunks
