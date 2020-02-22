@@ -4778,7 +4778,7 @@ public class Http1xTest extends HttpTest {
 
   @Test
   public void testHttpServerWithIdleTimeoutSendChunkedFile() throws Exception {
-    int test = 3;
+    int test = 4;
     int port = 9091;
     // Does not pass reliably in CI (timeout)
     Assume.assumeFalse(vertx.isNativeTransportEnabled());
