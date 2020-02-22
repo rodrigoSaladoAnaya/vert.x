@@ -4773,11 +4773,16 @@ public class Http1xTest extends HttpTest {
 
   @Test
   public void testHttpServerWithIdleTimeoutSendChunkedFile() throws Exception {
-    //test 11
+    //test 12
     // Does not pass reliably in CI (timeout)
     Assume.assumeFalse(vertx.isNativeTransportEnabled());
     int expected = 16 * 1024 * 1024; // We estimate this will take more than 200ms to transfer with a 1ms pause in chunks
     File sent = TestUtils.tmpFile(".dat", expected);
+
+
+
+
+
 
 
     CountDownLatch onClose = new CountDownLatch(1);
@@ -4788,6 +4793,12 @@ public class Http1xTest extends HttpTest {
     });
     server = null;
     onClose.await();
+
+
+
+
+
+
 
     server = vertx
       .createHttpServer(createBaseServerOptions().setIdleTimeout(400).setIdleTimeoutUnit(TimeUnit.MILLISECONDS))
