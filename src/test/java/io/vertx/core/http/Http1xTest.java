@@ -13,6 +13,7 @@ package io.vertx.core.http;
 
 import io.netty.handler.codec.TooLongFrameException;
 import io.vertx.core.*;
+import io.vertx.core.Future;
 import io.vertx.core.buffer.Buffer;
 import io.vertx.core.http.impl.HttpServerImpl;
 import io.vertx.core.http.impl.HttpUtils;
@@ -4778,7 +4779,7 @@ public class Http1xTest extends HttpTest {
 
   @Test
   public void testHttpServerWithIdleTimeoutSendChunkedFile() throws Exception {
-    //test runOnContext 20
+    //test t2 1
     // Does not pass reliably in CI (timeout)
     Assume.assumeFalse(vertx.isNativeTransportEnabled());
     int expected = 16 * 1024 * 1024; // We estimate this will take more than 200ms to transfer with a 1ms pause in chunks
@@ -4786,40 +4787,12 @@ public class Http1xTest extends HttpTest {
 
 
 
-log.info("...... Current port : " +  server.actualPort());
-//if(server.actualPort() != 0) {
-  CountDownLatch onClose = new CountDownLatch(1);
-  vertx.getOrCreateContext().runOnContext(v -> {
-    server.close()
-      .onComplete(result -> {
-        assertTrue(result.succeeded());
-        onClose.countDown();
-      });
-    server = null;
-  });
-  onClose.await();
-//}
-
-
-log.info("SERVER === " + server);
-
-    /*CountDownLatch onClose = new CountDownLatch(1);
-    vertx.getOrCreateContext().runOnContext(v -> {
-      server.close()
-        .onComplete(result -> {
-          assertTrue(result.succeeded());
-          onClose.countDown();
-        });
-      server = null;
+    CountDownLatch onClose = new CountDownLatch(1);
+    Future<Void> close = server.close();
+    close.onComplete(v -> {
+      onClose.countDown();
     });
     onClose.await();
-/**/
-
-    //stopServer();
-
-
-
-
 
 
 
