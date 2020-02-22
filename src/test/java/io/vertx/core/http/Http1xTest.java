@@ -4779,15 +4779,15 @@ public class Http1xTest extends HttpTest {
   @Test
   public void testHttpServerWithIdleTimeoutSendChunkedFile() throws Exception {
     Assume.assumeFalse(vertx.isNativeTransportEnabled());
-    int test = 2;
+    int test = 3;
     final int port = 9091;
     final SocketAddress serverAddress = SocketAddress.inetSocketAddress(port, DEFAULT_HTTP_HOST);
     int expected = 16 * 1024 * 1024; // We estimate this will take more than 200ms to transfer with a 1ms pause in chunks
     File sent = TestUtils.tmpFile(".dat", expected);
 
-    CountDownLatch firstCloseLatch = new CountDownLatch(1);
-    server.close(onSuccess(v -> firstCloseLatch.countDown()));
-    awaitLatch(firstCloseLatch);
+    CountDownLatch serverCloseLatch = new CountDownLatch(1);
+    server.close(onSuccess(v -> serverCloseLatch.countDown()));
+    awaitLatch(serverCloseLatch);
 
     server = vertx
       .createHttpServer(createBaseServerOptions().setIdleTimeout(400).setIdleTimeoutUnit(TimeUnit.MILLISECONDS))
