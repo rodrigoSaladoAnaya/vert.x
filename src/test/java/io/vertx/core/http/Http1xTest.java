@@ -4779,7 +4779,10 @@ public class Http1xTest extends HttpTest {
   @Test
   public void testHttpServerWithIdleTimeoutSendChunkedFile() throws Exception {
     int test = 5;
+
     int port = 9091;
+    SocketAddress serverAddress = SocketAddress.inetSocketAddress(port, DEFAULT_HTTP_HOST);
+
     // Does not pass reliably in CI (timeout)
     Assume.assumeFalse(vertx.isNativeTransportEnabled());
     int expected = 16 * 1024 * 1024; // We estimate this will take more than 200ms to transfer with a 1ms pause in chunks
@@ -4791,15 +4794,17 @@ public class Http1xTest extends HttpTest {
     });
     serverClose.await();
 
+
     server = vertx
-      .createHttpServer(createBaseServerOptions().setPort(port).setIdleTimeout(400).setIdleTimeoutUnit(TimeUnit.MILLISECONDS))
+      .createHttpServer(createBaseServerOptions().setPort(serverAddress.port()).setIdleTimeout(400).setIdleTimeoutUnit(TimeUnit.MILLISECONDS))
       .requestHandler(
         req -> {
           req.response().sendFile(sent.getAbsolutePath());
         });
-    startServer(testAddress);
+    
+    startServer(serverAddress);
     log.info("xxxxx => " + test);
-    client.request(HttpMethod.GET, testAddress, port, DEFAULT_HTTP_HOST, "/")
+    client.request(HttpMethod.GET, serverAddress, serverAddress.port(), serverAddress.host(), "/")
       .setHandler(onSuccess(resp -> {
         long now = System.currentTimeMillis();
         int[] length = {0};
