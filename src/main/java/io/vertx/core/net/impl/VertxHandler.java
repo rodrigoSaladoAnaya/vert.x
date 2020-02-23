@@ -22,6 +22,9 @@ import io.netty.channel.ChannelHandlerContext;
 import io.netty.handler.timeout.IdleState;
 import io.netty.handler.timeout.IdleStateEvent;
 import io.vertx.core.Handler;
+import io.vertx.core.http.impl.VertxHttp2ConnectionHandler;
+import io.vertx.core.impl.logging.Logger;
+import io.vertx.core.impl.logging.LoggerFactory;
 
 import java.util.function.Function;
 
@@ -29,6 +32,8 @@ import java.util.function.Function;
  * @author <a href="mailto:nmaurer@redhat.com">Norman Maurer</a>
  */
 public final class VertxHandler<C extends ConnectionBase> extends ChannelDuplexHandler {
+
+  private static final Logger log = LoggerFactory.getLogger(VertxHandler.class);
 
   public static <C extends ConnectionBase> VertxHandler<C> create(Function<ChannelHandlerContext, C> connectionFactory) {
     return new VertxHandler<>(connectionFactory);
@@ -158,6 +163,7 @@ public final class VertxHandler<C extends ConnectionBase> extends ChannelDuplexH
 
   @Override
   public void userEventTriggered(ChannelHandlerContext ctx, Object evt) throws Exception {
+    log.info("xxxxx 0) " + ctx + ", " + evt);
     if (evt instanceof IdleStateEvent && ((IdleStateEvent) evt).state() == IdleState.ALL_IDLE) {
       conn.handleIdle();
     } else {

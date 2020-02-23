@@ -124,6 +124,7 @@ public class Http2UpgradedClientConnection implements HttpClientConnection {
       class UpgradeRequestHandler extends ChannelInboundHandlerAdapter {
         @Override
         public void userEventTriggered(ChannelHandlerContext ctx, Object evt) throws Exception {
+          log.info("xxxxx 1) " + ctx + ", " + evt);
           super.userEventTriggered(ctx, evt);
           ChannelPipeline pipeline = ctx.pipeline();
           if (evt == HttpClientUpgradeHandler.UpgradeEvent.UPGRADE_SUCCESSFUL) {

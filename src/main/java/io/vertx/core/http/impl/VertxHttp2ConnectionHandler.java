@@ -148,6 +148,7 @@ class VertxHttp2ConnectionHandler<C extends Http2ConnectionBase> extends Http2Co
   @Override
   public void userEventTriggered(ChannelHandlerContext ctx, Object evt) throws Exception {
     try {
+      log.info("xxxxx 2) " + ctx + ", " + evt);
       super.userEventTriggered(ctx, evt);
     } finally {
       if (evt instanceof IdleStateEvent && ((IdleStateEvent) evt).state() == IdleState.ALL_IDLE) {
