@@ -162,7 +162,7 @@ public final class VertxHandler<C extends ConnectionBase> extends ChannelDuplexH
 
   @Override
   public void userEventTriggered(ChannelHandlerContext ctx, Object evt) throws Exception {
-    log.info("xxxxx 0) " + ctx + ", " + evt);
+    log.info("xxxxx 0) " + ctx + ", " + evt + " conn ->" + conn);
     if (evt instanceof IdleStateEvent && ((IdleStateEvent) evt).state() == IdleState.ALL_IDLE) {
       conn.handleIdle();
     } else {
