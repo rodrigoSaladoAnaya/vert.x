@@ -360,7 +360,7 @@ public abstract class ConnectionBase {
    */
   protected void handleIdle() {
     log.info("xxxxx 0.1) " + chctx);
-    //chctx.close();
+    chctx.close();
   }
 
   protected abstract void handleInterestedOpsChanged();
