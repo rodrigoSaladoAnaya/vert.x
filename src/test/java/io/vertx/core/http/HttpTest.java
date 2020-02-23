@@ -20,10 +20,13 @@ import io.vertx.core.*;
 import io.vertx.core.buffer.Buffer;
 import io.vertx.core.dns.AddressResolverOptions;
 import io.vertx.core.file.AsyncFile;
+import io.vertx.core.impl.logging.Logger;
+import io.vertx.core.impl.logging.LoggerFactory;
 import io.vertx.core.net.*;
 import io.vertx.core.streams.Pump;
 import io.vertx.test.core.Repeat;
 import io.vertx.test.core.TestUtils;
+import io.vertx.test.core.VertxTestBase;
 import io.vertx.test.fakestream.FakeStream;
 import io.vertx.test.netty.TestLoggerFactory;
 import org.junit.Assume;
@@ -54,6 +57,8 @@ import static java.util.Collections.singletonList;
  * @author <a href="mailto:julien@julienviet.com">Julien Viet</a>
  */
 public abstract class HttpTest extends HttpTestBase {
+
+  static final Logger log = LoggerFactory.getLogger(HttpTest.class);
 
   @Rule
   public TemporaryFolder testFolder = new TemporaryFolder();
