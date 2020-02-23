@@ -20,6 +20,8 @@ import io.vertx.core.*;
 import io.vertx.core.buffer.Buffer;
 import io.vertx.core.dns.AddressResolverOptions;
 import io.vertx.core.file.AsyncFile;
+import io.vertx.core.impl.logging.Logger;
+import io.vertx.core.impl.logging.LoggerFactory;
 import io.vertx.core.net.*;
 import io.vertx.core.streams.Pump;
 import io.vertx.test.core.Repeat;
@@ -55,6 +57,8 @@ import static java.util.Collections.singletonList;
  */
 public abstract class HttpTest extends HttpTestBase {
 
+  private static final Logger log = LoggerFactory.getLogger(HttpTest.class);
+
   @Rule
   public TemporaryFolder testFolder = new TemporaryFolder();
 
@@ -74,6 +78,7 @@ public abstract class HttpTest extends HttpTestBase {
 
   @Test
   public void testClientRequestArguments() throws Exception {
+    log.info("..... context: " + vertx.getOrCreateContext());
     HttpClientRequest req = client.request(HttpMethod.PUT, DEFAULT_HTTP_PORT, DEFAULT_HTTP_HOST, DEFAULT_TEST_URI).setHandler(noOpHandler());
     assertNullPointerException(() -> req.putHeader((String) null, "someValue"));
     assertNullPointerException(() -> req.putHeader((CharSequence) null, "someValue"));
@@ -91,6 +96,7 @@ public abstract class HttpTest extends HttpTestBase {
 
   @Test
   public void testListenSocketAddress() {
+    log.info("..... context: " + vertx.getOrCreateContext());
     NetClient netClient = vertx.createNetClient();
     server = vertx.createHttpServer().requestHandler(req -> req.response().end());
     SocketAddress sockAddress = SocketAddress.inetSocketAddress(DEFAULT_HTTP_PORT, DEFAULT_HTTP_HOST);
@@ -113,6 +119,7 @@ public abstract class HttpTest extends HttpTestBase {
 
   @Test
   public void testListenDomainSocketAddress() throws Exception {
+    log.info("..... context: " + vertx.getOrCreateContext());
     Vertx vx = Vertx.vertx(new VertxOptions().setPreferNativeTransport(true));
     Assume.assumeTrue("Native transport must be enabled", vx.isNativeTransportEnabled());
     int len = 3;
@@ -152,6 +159,7 @@ public abstract class HttpTest extends HttpTestBase {
 
   @Test
   public void testLowerCaseHeaders() throws Exception {
+    log.info("..... context: " + vertx.getOrCreateContext());
     server.requestHandler(req -> {
       assertEquals("foo", req.headers().get("Foo"));
       assertEquals("foo", req.headers().get("foo"));
@@ -175,14 +183,14 @@ public abstract class HttpTest extends HttpTestBase {
     server.listen(testAddress, onSuccess(server -> {
       HttpClientRequest req = client.request(HttpMethod.GET, testAddress, DEFAULT_HTTP_PORT, DEFAULT_HTTP_HOST, DEFAULT_TEST_URI)
         .setHandler(onSuccess(resp -> {
-        assertEquals("quux", resp.headers().get("Quux"));
-        assertEquals("quux", resp.headers().get("quux"));
-        assertEquals("quux", resp.headers().get("qUUX"));
-        assertTrue(resp.headers().contains("Quux"));
-        assertTrue(resp.headers().contains("quux"));
-        assertTrue(resp.headers().contains("qUUX"));
-        testComplete();
-      }));
+          assertEquals("quux", resp.headers().get("Quux"));
+          assertEquals("quux", resp.headers().get("quux"));
+          assertEquals("quux", resp.headers().get("qUUX"));
+          assertTrue(resp.headers().contains("Quux"));
+          assertTrue(resp.headers().contains("quux"));
+          assertTrue(resp.headers().contains("qUUX"));
+          testComplete();
+        }));
 
       req.putHeader("Foo", "foo");
       assertEquals("foo", req.headers().get("Foo"));
@@ -200,65 +208,69 @@ public abstract class HttpTest extends HttpTestBase {
 
   @Test
   public void testServerActualPortWhenSet() {
+    log.info("..... context: " + vertx.getOrCreateContext());
     server
-        .requestHandler(request -> {
-          request.response().end("hello");
-        })
-        .listen(ar -> {
-          assertEquals(ar.result().actualPort(), DEFAULT_HTTP_PORT);
-          vertx.createHttpClient(createBaseClientOptions()).get(ar.result().actualPort(), DEFAULT_HTTP_HOST, "/", onSuccess(response -> {
-            assertEquals(response.statusCode(), 200);
-            response.bodyHandler(body -> {
-              assertEquals(body.toString("UTF-8"), "hello");
-              testComplete();
-            });
-          }));
-        });
+      .requestHandler(request -> {
+        request.response().end("hello");
+      })
+      .listen(ar -> {
+        assertEquals(ar.result().actualPort(), DEFAULT_HTTP_PORT);
+        vertx.createHttpClient(createBaseClientOptions()).get(ar.result().actualPort(), DEFAULT_HTTP_HOST, "/", onSuccess(response -> {
+          assertEquals(response.statusCode(), 200);
+          response.bodyHandler(body -> {
+            assertEquals(body.toString("UTF-8"), "hello");
+            testComplete();
+          });
+        }));
+      });
     await();
   }
 
   @Test
   public void testServerActualPortWhenZero() {
+    log.info("..... context: " + vertx.getOrCreateContext());
     server = vertx.createHttpServer(createBaseServerOptions().setPort(0).setHost(DEFAULT_HTTP_HOST));
     server
-        .requestHandler(request -> {
-          request.response().end("hello");
-        })
-        .listen(ar -> {
-          assertTrue(ar.result().actualPort() != 0);
-          vertx.createHttpClient(createBaseClientOptions()).get(ar.result().actualPort(), DEFAULT_HTTP_HOST, "/", onSuccess(response -> {
-            assertEquals(response.statusCode(), 200);
-            response.bodyHandler(body -> {
-              assertEquals(body.toString("UTF-8"), "hello");
-              testComplete();
-            });
-          }));
-        });
+      .requestHandler(request -> {
+        request.response().end("hello");
+      })
+      .listen(ar -> {
+        assertTrue(ar.result().actualPort() != 0);
+        vertx.createHttpClient(createBaseClientOptions()).get(ar.result().actualPort(), DEFAULT_HTTP_HOST, "/", onSuccess(response -> {
+          assertEquals(response.statusCode(), 200);
+          response.bodyHandler(body -> {
+            assertEquals(body.toString("UTF-8"), "hello");
+            testComplete();
+          });
+        }));
+      });
     await();
   }
 
   @Test
   public void testServerActualPortWhenZeroPassedInListen() {
+    log.info("..... context: " + vertx.getOrCreateContext());
     server = vertx.createHttpServer(new HttpServerOptions(createBaseServerOptions()).setHost(DEFAULT_HTTP_HOST));
     server
-        .requestHandler(request -> {
-          request.response().end("hello");
-        })
-        .listen(0, ar -> {
-          assertTrue(ar.result().actualPort() != 0);
-          vertx.createHttpClient(createBaseClientOptions()).get(ar.result().actualPort(), DEFAULT_HTTP_HOST, "/", onSuccess(response -> {
-            assertEquals(response.statusCode(), 200);
-            response.bodyHandler(body -> {
-              assertEquals(body.toString("UTF-8"), "hello");
-              testComplete();
-            });
-          }));
-        });
+      .requestHandler(request -> {
+        request.response().end("hello");
+      })
+      .listen(0, ar -> {
+        assertTrue(ar.result().actualPort() != 0);
+        vertx.createHttpClient(createBaseClientOptions()).get(ar.result().actualPort(), DEFAULT_HTTP_HOST, "/", onSuccess(response -> {
+          assertEquals(response.statusCode(), 200);
+          response.bodyHandler(body -> {
+            assertEquals(body.toString("UTF-8"), "hello");
+            testComplete();
+          });
+        }));
+      });
     await();
   }
 
   @Test
   public void testRequestNPE() {
+    log.info("..... context: " + vertx.getOrCreateContext());
     String uri = "/some-uri?foo=bar";
     TestUtils.assertNullPointerException(() -> client.request(null, DEFAULT_HTTP_PORT, DEFAULT_HTTP_HOST, uri));
     TestUtils.assertNullPointerException(() -> client.request( null, 8080, "localhost", "/somepath"));
@@ -268,6 +280,7 @@ public abstract class HttpTest extends HttpTestBase {
 
   @Test
   public void testInvalidAbsoluteURI() {
+    log.info("..... context: " + vertx.getOrCreateContext());
     try {
       client.request(new RequestOptions().setAbsoluteURI("ijdijwidjqwoijd192d192192ej12d")).setHandler(noOpHandler()).end();
       fail("Should throw exception");
@@ -278,6 +291,7 @@ public abstract class HttpTest extends HttpTestBase {
 
   @Test
   public void testPutHeadersOnRequest() {
+    log.info("..... context: " + vertx.getOrCreateContext());
     server.requestHandler(req -> {
       assertEquals("bar", req.headers().get("foo"));
       assertEquals("bar", req.getHeader("foo"));
@@ -297,6 +311,7 @@ public abstract class HttpTest extends HttpTestBase {
 
   @Test
   public void testPutHeaderReplacesPreviousHeaders() throws Exception {
+    log.info("..... context: " + vertx.getOrCreateContext());
     server.requestHandler(req ->
       req.response()
         .putHeader("Location", "http://example1.org")
@@ -315,120 +330,140 @@ public abstract class HttpTest extends HttpTestBase {
 
   @Test
   public void testSimpleGET() {
+    log.info("..... context: " + vertx.getOrCreateContext());
     String uri = "/some-uri?foo=bar";
     testSimpleRequest(uri, HttpMethod.GET, resp -> testComplete());
   }
 
   @Test
   public void testSimplePUT() {
+    log.info("..... context: " + vertx.getOrCreateContext());
     String uri = "/some-uri?foo=bar";
     testSimpleRequest(uri, HttpMethod.PUT, resp -> testComplete());
   }
 
   @Test
   public void testSimplePOST() {
+    log.info("..... context: " + vertx.getOrCreateContext());
     String uri = "/some-uri?foo=bar";
     testSimpleRequest(uri, HttpMethod.POST, resp -> testComplete());
   }
 
   @Test
   public void testSimpleDELETE() {
+    log.info("..... context: " + vertx.getOrCreateContext());
     String uri = "/some-uri?foo=bar";
     testSimpleRequest(uri, HttpMethod.DELETE, resp -> testComplete());
   }
 
   @Test
   public void testSimpleHEAD() {
+    log.info("..... context: " + vertx.getOrCreateContext());
     String uri = "/some-uri?foo=bar";
     testSimpleRequest(uri, HttpMethod.HEAD, resp -> testComplete());
   }
 
   @Test
   public void testSimpleTRACE() {
+    log.info("..... context: " + vertx.getOrCreateContext());
     String uri = "/some-uri?foo=bar";
     testSimpleRequest(uri, HttpMethod.TRACE, resp -> testComplete());
   }
 
   @Test
   public void testSimpleCONNECT() {
+    log.info("..... context: " + vertx.getOrCreateContext());
     String uri = "/some-uri?foo=bar";
     testSimpleRequest(uri, HttpMethod.CONNECT, resp -> testComplete());
   }
 
   @Test
   public void testSimpleOPTIONS() {
+    log.info("..... context: " + vertx.getOrCreateContext());
     String uri = "/some-uri?foo=bar";
     testSimpleRequest(uri, HttpMethod.OPTIONS, resp -> testComplete());
   }
 
   @Test
   public void testSimplePATCH() {
+    log.info("..... context: " + vertx.getOrCreateContext());
     String uri = "/some-uri?foo=bar";
     testSimpleRequest(uri, HttpMethod.PATCH, resp -> testComplete());
   }
 
   @Test
   public void testSimpleGETAbsolute() {
+    log.info("..... context: " + vertx.getOrCreateContext());
     String uri = "/some-uri?foo=bar";
     testSimpleRequest(uri, HttpMethod.GET, true, resp -> testComplete());
   }
 
   @Test
   public void testEmptyPathGETAbsolute() {
+    log.info("..... context: " + vertx.getOrCreateContext());
     String uri = "";
     testSimpleRequest(uri, HttpMethod.GET, true, resp -> testComplete());
   }
 
   @Test
   public void testNoPathButQueryGETAbsolute() {
+    log.info("..... context: " + vertx.getOrCreateContext());
     String uri = "?foo=bar";
     testSimpleRequest(uri, HttpMethod.GET, true, resp -> testComplete());
   }
 
   @Test
   public void testSimplePUTAbsolute() {
+    log.info("..... context: " + vertx.getOrCreateContext());
     String uri = "/some-uri?foo=bar";
     testSimpleRequest(uri, HttpMethod.PUT, true, resp -> testComplete());
   }
 
   @Test
   public void testSimplePOSTAbsolute() {
+    log.info("..... context: " + vertx.getOrCreateContext());
     String uri = "/some-uri?foo=bar";
     testSimpleRequest(uri, HttpMethod.POST, true, resp -> testComplete());
   }
 
   @Test
   public void testSimpleDELETEAbsolute() {
+    log.info("..... context: " + vertx.getOrCreateContext());
     String uri = "/some-uri?foo=bar";
     testSimpleRequest(uri, HttpMethod.DELETE, true, resp -> testComplete());
   }
 
   @Test
   public void testSimpleHEADAbsolute() {
+    log.info("..... context: " + vertx.getOrCreateContext());
     String uri = "/some-uri?foo=bar";
     testSimpleRequest(uri, HttpMethod.HEAD, true, resp -> testComplete());
   }
 
   @Test
   public void testSimpleTRACEAbsolute() {
+    log.info("..... context: " + vertx.getOrCreateContext());
     String uri = "/some-uri?foo=bar";
     testSimpleRequest(uri, HttpMethod.TRACE, true, resp -> testComplete());
   }
 
   @Test
   public void testSimpleCONNECTAbsolute() {
+    log.info("..... context: " + vertx.getOrCreateContext());
     String uri = "/some-uri?foo=bar";
     testSimpleRequest(uri, HttpMethod.CONNECT, true, resp -> testComplete());
   }
 
   @Test
   public void testSimpleOPTIONSAbsolute() {
+    log.info("..... context: " + vertx.getOrCreateContext());
     String uri = "/some-uri?foo=bar";
     testSimpleRequest(uri, HttpMethod.OPTIONS, true, resp -> testComplete());
   }
 
   @Test
   public void testSimplePATCHAbsolute() {
+    log.info("..... context: " + vertx.getOrCreateContext());
     String uri = "/some-uri?foo=bar";
     testSimpleRequest(uri, HttpMethod.PATCH, true, resp -> testComplete());
   }
@@ -477,6 +512,7 @@ public abstract class HttpTest extends HttpTestBase {
 
   @Test
   public void testServerChaining() {
+    log.info("..... context: " + vertx.getOrCreateContext());
     server.requestHandler(req -> {
       assertTrue(req.response().setChunked(true) == req.response());
       testComplete();
@@ -491,6 +527,7 @@ public abstract class HttpTest extends HttpTestBase {
 
   @Test
   public void testServerChainingSendFile() throws Exception {
+    log.info("..... context: " + vertx.getOrCreateContext());
     File file = setupFile("test-server-chaining.dat", "blah");
     server.requestHandler(req -> {
       assertTrue(req.response().sendFile(file.getAbsolutePath(), null) == req.response());
@@ -508,6 +545,7 @@ public abstract class HttpTest extends HttpTestBase {
 
   @Test
   public void testResponseEndHandlers1() {
+    log.info("..... context: " + vertx.getOrCreateContext());
     waitFor(2);
     AtomicInteger cnt = new AtomicInteger();
     server.requestHandler(req -> {
@@ -535,6 +573,7 @@ public abstract class HttpTest extends HttpTestBase {
 
   @Test
   public void testResponseEndHandlers2() {
+    log.info("..... context: " + vertx.getOrCreateContext());
     waitFor(2);
     AtomicInteger cnt = new AtomicInteger();
     String content = "blah";
@@ -566,6 +605,7 @@ public abstract class HttpTest extends HttpTestBase {
 
   @Test
   public void testResponseEndHandlersChunkedResponse() {
+    log.info("..... context: " + vertx.getOrCreateContext());
     waitFor(2);
     AtomicInteger cnt = new AtomicInteger();
     String chunk = "blah";
@@ -604,6 +644,7 @@ public abstract class HttpTest extends HttpTestBase {
 
   @Test
   public void testResponseEndHandlersSendFile() throws Exception {
+    log.info("..... context: " + vertx.getOrCreateContext());
     waitFor(2);
     AtomicInteger cnt = new AtomicInteger();
     String content = "iqdioqwdqwiojqwijdwqd";
@@ -636,6 +677,7 @@ public abstract class HttpTest extends HttpTestBase {
 
   @Test
   public void testResponseEndHandlersConnectionClose() {
+    log.info("..... context: " + vertx.getOrCreateContext());
     waitFor(2);
     server.requestHandler(req -> {
       req.response().endHandler(v -> complete());
@@ -653,26 +695,31 @@ public abstract class HttpTest extends HttpTestBase {
 
   @Test
   public void testAbsoluteURI() {
+    log.info("..... context: " + vertx.getOrCreateContext());
     testURIAndPath("http://localhost:" + DEFAULT_HTTP_PORT + "/this/is/a/path/foo.html", "/this/is/a/path/foo.html");
   }
 
   @Test
   public void testRelativeURI() {
+    log.info("..... context: " + vertx.getOrCreateContext());
     testURIAndPath("/this/is/a/path/foo.html", "/this/is/a/path/foo.html");
   }
 
   @Test
   public void testAbsoluteURIWithHttpSchemaInQuery() {
+    log.info("..... context: " + vertx.getOrCreateContext());
     testURIAndPath("http://localhost:" + DEFAULT_HTTP_PORT + "/correct/path?url=http://localhost:8008/wrong/path", "/correct/path");
   }
 
   @Test
   public void testRelativeURIWithHttpSchemaInQuery() {
+    log.info("..... context: " + vertx.getOrCreateContext());
     testURIAndPath("/correct/path?url=http://localhost:8008/wrong/path", "/correct/path");
   }
 
   @Test
   public void testAbsoluteURIEmptyPath() {
+    log.info("..... context: " + vertx.getOrCreateContext());
     testURIAndPath("http://localhost:" + DEFAULT_HTTP_PORT + "/", "/");
   }
 
@@ -694,31 +741,37 @@ public abstract class HttpTest extends HttpTestBase {
 
   @Test
   public void testParamUmlauteDecoding() throws UnsupportedEncodingException {
+    log.info("..... context: " + vertx.getOrCreateContext());
     testParamDecoding("\u00e4\u00fc\u00f6");
   }
 
   @Test
   public void testParamPlusDecoding() throws UnsupportedEncodingException {
+    log.info("..... context: " + vertx.getOrCreateContext());
     testParamDecoding("+");
   }
 
   @Test
   public void testParamPercentDecoding() throws UnsupportedEncodingException {
+    log.info("..... context: " + vertx.getOrCreateContext());
     testParamDecoding("%");
   }
 
   @Test
   public void testParamSpaceDecoding() throws UnsupportedEncodingException {
+    log.info("..... context: " + vertx.getOrCreateContext());
     testParamDecoding(" ");
   }
 
   @Test
   public void testParamNormalDecoding() throws UnsupportedEncodingException {
+    log.info("..... context: " + vertx.getOrCreateContext());
     testParamDecoding("hello");
   }
 
   @Test
   public void testParamAltogetherDecoding() throws UnsupportedEncodingException {
+    log.info("..... context: " + vertx.getOrCreateContext());
     testParamDecoding("\u00e4\u00fc\u00f6+% hello");
   }
 
@@ -746,11 +799,13 @@ public abstract class HttpTest extends HttpTestBase {
 
   @Test
   public void testParamsAmpersand() {
+    log.info("..... context: " + vertx.getOrCreateContext());
     testParams('&');
   }
 
   @Test
   public void testParamsSemiColon() {
+    log.info("..... context: " + vertx.getOrCreateContext());
     testParams(';');
   }
 
@@ -777,6 +832,7 @@ public abstract class HttpTest extends HttpTestBase {
 
   @Test
   public void testNoParams() {
+    log.info("..... context: " + vertx.getOrCreateContext());
     server.requestHandler(req -> {
       assertNull(req.query());
       assertTrue(req.params().isEmpty());
@@ -794,6 +850,7 @@ public abstract class HttpTest extends HttpTestBase {
 
   @Test
   public void testDefaultRequestHeaders() {
+    log.info("..... context: " + vertx.getOrCreateContext());
     server.requestHandler(req -> {
       if (req.version() == HttpVersion.HTTP_1_1) {
         assertEquals(1, req.headers().size());
@@ -815,6 +872,7 @@ public abstract class HttpTest extends HttpTestBase {
 
   @Test
   public void testRequestHeadersWithCharSequence() {
+    log.info("..... context: " + vertx.getOrCreateContext());
     HashMap<CharSequence, String> expectedHeaders = new HashMap<>();
     expectedHeaders.put(HttpHeaders.TEXT_HTML, "text/html");
     expectedHeaders.put(HttpHeaders.USER_AGENT, "User-Agent");
@@ -847,11 +905,13 @@ public abstract class HttpTest extends HttpTestBase {
 
   @Test
   public void testRequestHeadersPutAll() {
+    log.info("..... context: " + vertx.getOrCreateContext());
     testRequestHeaders(false);
   }
 
   @Test
   public void testRequestHeadersIndividually() {
+    log.info("..... context: " + vertx.getOrCreateContext());
     testRequestHeaders(true);
   }
 
@@ -887,11 +947,13 @@ public abstract class HttpTest extends HttpTestBase {
 
   @Test
   public void testResponseHeadersPutAll() {
+    log.info("..... context: " + vertx.getOrCreateContext());
     testResponseHeaders(false);
   }
 
   @Test
   public void testResponseHeadersIndividually() {
+    log.info("..... context: " + vertx.getOrCreateContext());
     testResponseHeaders(true);
   }
 
@@ -926,6 +988,7 @@ public abstract class HttpTest extends HttpTestBase {
 
   @Test
   public void testResponseHeadersWithCharSequence() {
+    log.info("..... context: " + vertx.getOrCreateContext());
     HashMap<CharSequence, String> headers = new HashMap<>();
     headers.put(HttpHeaders.TEXT_HTML, "text/html");
     headers.put(HttpHeaders.USER_AGENT, "User-Agent");
@@ -952,16 +1015,19 @@ public abstract class HttpTest extends HttpTestBase {
 
   @Test
   public void testResponseMultipleSetCookieInHeader() {
+    log.info("..... context: " + vertx.getOrCreateContext());
     testResponseMultipleSetCookie(true, false);
   }
 
   @Test
   public void testResponseMultipleSetCookieInTrailer() {
+    log.info("..... context: " + vertx.getOrCreateContext());
     testResponseMultipleSetCookie(false, true);
   }
 
   @Test
   public void testResponseMultipleSetCookieInHeaderAndTrailer() {
+    log.info("..... context: " + vertx.getOrCreateContext());
     testResponseMultipleSetCookie(true, true);
   }
 
@@ -1005,6 +1071,7 @@ public abstract class HttpTest extends HttpTestBase {
 
   @Test
   public void testUseRequestAfterComplete() {
+    log.info("..... context: " + vertx.getOrCreateContext());
     server.requestHandler(noOpHandler());
 
     server.listen(testAddress, onSuccess(server -> {
@@ -1036,6 +1103,7 @@ public abstract class HttpTest extends HttpTestBase {
 
   @Test
   public void testRequestBodyBufferAtEnd() {
+    log.info("..... context: " + vertx.getOrCreateContext());
     Buffer body = TestUtils.randomBuffer(1000);
     server.requestHandler(req -> req.bodyHandler(buffer -> {
       assertEquals(body, buffer);
@@ -1053,16 +1121,19 @@ public abstract class HttpTest extends HttpTestBase {
 
   @Test
   public void testRequestBodyStringDefaultEncodingAtEnd() {
+    log.info("..... context: " + vertx.getOrCreateContext());
     testRequestBodyStringAtEnd(null);
   }
 
   @Test
   public void testRequestBodyStringUTF8AtEnd() {
+    log.info("..... context: " + vertx.getOrCreateContext());
     testRequestBodyStringAtEnd("UTF-8");
   }
 
   @Test
   public void testRequestBodyStringUTF16AtEnd() {
+    log.info("..... context: " + vertx.getOrCreateContext());
     testRequestBodyStringAtEnd("UTF-16");
   }
 
@@ -1098,11 +1169,13 @@ public abstract class HttpTest extends HttpTestBase {
 
   @Test
   public void testRequestBodyWriteChunked() {
+    log.info("..... context: " + vertx.getOrCreateContext());
     testRequestBodyWrite(true);
   }
 
   @Test
   public void testRequestBodyWriteNonChunked() {
+    log.info("..... context: " + vertx.getOrCreateContext());
     testRequestBodyWrite(false);
   }
 
@@ -1140,31 +1213,37 @@ public abstract class HttpTest extends HttpTestBase {
 
   @Test
   public void testRequestBodyWriteStringChunkedDefaultEncoding() {
+    log.info("..... context: " + vertx.getOrCreateContext());
     testRequestBodyWriteString(true, null);
   }
 
   @Test
   public void testRequestBodyWriteStringChunkedUTF8() {
+    log.info("..... context: " + vertx.getOrCreateContext());
     testRequestBodyWriteString(true, "UTF-8");
   }
 
   @Test
   public void testRequestBodyWriteStringChunkedUTF16() {
+    log.info("..... context: " + vertx.getOrCreateContext());
     testRequestBodyWriteString(true, "UTF-16");
   }
 
   @Test
   public void testRequestBodyWriteStringNonChunkedDefaultEncoding() {
+    log.info("..... context: " + vertx.getOrCreateContext());
     testRequestBodyWriteString(false, null);
   }
 
   @Test
   public void testRequestBodyWriteStringNonChunkedUTF8() {
+    log.info("..... context: " + vertx.getOrCreateContext());
     testRequestBodyWriteString(false, "UTF-8");
   }
 
   @Test
   public void testRequestBodyWriteStringNonChunkedUTF16() {
+    log.info("..... context: " + vertx.getOrCreateContext());
     testRequestBodyWriteString(false, "UTF-16");
   }
 
@@ -1208,6 +1287,7 @@ public abstract class HttpTest extends HttpTestBase {
 
   @Test
   public void testRequestWrite() {
+    log.info("..... context: " + vertx.getOrCreateContext());
     int times = 3;
     Buffer chunk = TestUtils.randomBuffer(1000);
     server.requestHandler(req -> {
@@ -1239,6 +1319,7 @@ public abstract class HttpTest extends HttpTestBase {
   @Ignore
   @Test
   public void testConnectWithoutResponseHandler() throws Exception {
+    log.info("..... context: " + vertx.getOrCreateContext());
     try {
       client.request(HttpMethod.GET, DEFAULT_HTTP_PORT, DEFAULT_HTTP_HOST, DEFAULT_TEST_URI).end();
       fail();
@@ -1283,6 +1364,7 @@ public abstract class HttpTest extends HttpTestBase {
 
   @Test
   public void testClientExceptionHandlerCalledWhenFailingToConnect() {
+    log.info("..... context: " + vertx.getOrCreateContext());
     waitFor(2);
     client.request(HttpMethod.GET, testAddress, 9998, "255.255.255.255", DEFAULT_TEST_URI)
       .setHandler(onFailure(err ->
@@ -1297,6 +1379,7 @@ public abstract class HttpTest extends HttpTestBase {
   @Repeat(times = 10)
   @Test
   public void testClientExceptionHandlerCalledWhenServerTerminatesConnection() throws Exception {
+    log.info("..... context: " + vertx.getOrCreateContext());
     int numReqs = 10;
     waitFor(numReqs);
     server.requestHandler(request -> {
@@ -1315,6 +1398,7 @@ public abstract class HttpTest extends HttpTestBase {
 
   @Test
   public void testClientExceptionHandlerCalledWhenServerTerminatesConnectionAfterPartialResponse() throws Exception {
+    log.info("..... context: " + vertx.getOrCreateContext());
     server.requestHandler(request -> {
       //Write partial response then close connection before completing it
       HttpServerResponse resp = request.response().setChunked(true);
@@ -1333,6 +1417,7 @@ public abstract class HttpTest extends HttpTestBase {
 
   @Test
   public void testContextExceptionHandlerCalledWhenExceptionOnDataHandler() throws Exception {
+    log.info("..... context: " + vertx.getOrCreateContext());
     client.close();
     server.requestHandler(request -> {
       request.response().end("foo");
@@ -1358,6 +1443,7 @@ public abstract class HttpTest extends HttpTestBase {
 
   @Test
   public void testClientExceptionHandlerCalledWhenExceptionOnBodyHandler() {
+    log.info("..... context: " + vertx.getOrCreateContext());
     client.close();
     server.requestHandler(request -> {
       request.response().end("foo");
@@ -1383,6 +1469,7 @@ public abstract class HttpTest extends HttpTestBase {
 
   @Test
   public void testNoExceptionHandlerCalledWhenResponseEnded() throws Exception {
+    log.info("..... context: " + vertx.getOrCreateContext());
     server.requestHandler(req -> {
       HttpServerResponse resp = req.response();
       req.exceptionHandler(this::fail);
@@ -1408,6 +1495,7 @@ public abstract class HttpTest extends HttpTestBase {
 
   @Test
   public void testServerExceptionHandlerOnClose() {
+    log.info("..... context: " + vertx.getOrCreateContext());
     waitFor(3);
     vertx.createHttpServer().requestHandler(req -> {
       HttpServerResponse resp = req.response();
@@ -1459,6 +1547,7 @@ public abstract class HttpTest extends HttpTestBase {
 
   @Test
   public void testClientRequestExceptionHandlerCalledWhenConnectionClosed() throws Exception {
+    log.info("..... context: " + vertx.getOrCreateContext());
     server.requestHandler(req -> {
       req.handler(buff -> {
         req.connection().close();
@@ -1469,13 +1558,14 @@ public abstract class HttpTest extends HttpTestBase {
       .setHandler(onFailure(err -> {}))
       .setChunked(true)
       .exceptionHandler(err -> {
-      testComplete();
-    }).write("chunk");
+        testComplete();
+      }).write("chunk");
     await();
   }
 
   @Test
   public void testClientResponseExceptionHandlerCalledWhenConnectionClosed() throws Exception {
+    log.info("..... context: " + vertx.getOrCreateContext());
     AtomicReference<HttpConnection> conn = new AtomicReference<>();
     server.requestHandler(req -> {
       conn.set(req.connection());
@@ -1496,6 +1586,7 @@ public abstract class HttpTest extends HttpTestBase {
 
   @Test
   public void testClientRequestExceptionHandlerCalledWhenRequestEnded() throws Exception {
+    log.info("..... context: " + vertx.getOrCreateContext());
     waitFor(2);
     server.requestHandler(req -> {
       req.connection().close();
@@ -1518,22 +1609,26 @@ public abstract class HttpTest extends HttpTestBase {
 
   @Test
   public void testDefaultStatus() {
+    log.info("..... context: " + vertx.getOrCreateContext());
     testStatusCode(-1, null);
   }
 
   @Test
   public void testDefaultOther() {
+    log.info("..... context: " + vertx.getOrCreateContext());
     // Doesn't really matter which one we choose
     testStatusCode(405, null);
   }
 
   @Test
   public void testOverrideStatusMessage() {
+    log.info("..... context: " + vertx.getOrCreateContext());
     testStatusCode(404, "some message");
   }
 
   @Test
   public void testOverrideDefaultStatusMessage() {
+    log.info("..... context: " + vertx.getOrCreateContext());
     testStatusCode(-1, "some other message");
   }
 
@@ -1573,11 +1668,13 @@ public abstract class HttpTest extends HttpTestBase {
 
   @Test
   public void testResponseTrailersPutAll() {
+    log.info("..... context: " + vertx.getOrCreateContext());
     testResponseTrailers(false);
   }
 
   @Test
   public void testResponseTrailersPutIndividually() {
+    log.info("..... context: " + vertx.getOrCreateContext());
     testResponseTrailers(true);
   }
 
@@ -1615,6 +1712,7 @@ public abstract class HttpTest extends HttpTestBase {
 
   @Test
   public void testResponseNoTrailers() {
+    log.info("..... context: " + vertx.getOrCreateContext());
     server.requestHandler(req -> {
       req.response().setChunked(true);
       req.response().end();
@@ -1635,6 +1733,7 @@ public abstract class HttpTest extends HttpTestBase {
 
   @Test
   public void testUseAfterServerResponseEnd() throws Exception {
+    log.info("..... context: " + vertx.getOrCreateContext());
     server.requestHandler(req -> {
       HttpServerResponse resp = req.response();
       assertFalse(resp.ended());
@@ -1676,6 +1775,7 @@ public abstract class HttpTest extends HttpTestBase {
 
   @Test
   public void testResponseBodyBufferAtEnd() {
+    log.info("..... context: " + vertx.getOrCreateContext());
     Buffer body = TestUtils.randomBuffer(1000);
 
     server.requestHandler(req -> {
@@ -1698,11 +1798,13 @@ public abstract class HttpTest extends HttpTestBase {
 
   @Test
   public void testResponseBodyWriteChunked() {
+    log.info("..... context: " + vertx.getOrCreateContext());
     testResponseBodyWrite(true);
   }
 
   @Test
   public void testResponseBodyWriteNonChunked() {
+    log.info("..... context: " + vertx.getOrCreateContext());
     testResponseBodyWrite(false);
   }
 
@@ -1746,31 +1848,37 @@ public abstract class HttpTest extends HttpTestBase {
 
   @Test
   public void testResponseBodyWriteStringChunkedDefaultEncoding() {
+    log.info("..... context: " + vertx.getOrCreateContext());
     testResponseBodyWriteString(true, null);
   }
 
   @Test
   public void testResponseBodyWriteStringChunkedUTF8() {
+    log.info("..... context: " + vertx.getOrCreateContext());
     testResponseBodyWriteString(true, "UTF-8");
   }
 
   @Test
   public void testResponseBodyWriteStringChunkedUTF16() {
+    log.info("..... context: " + vertx.getOrCreateContext());
     testResponseBodyWriteString(true, "UTF-16");
   }
 
   @Test
   public void testResponseBodyWriteStringNonChunkedDefaultEncoding() {
+    log.info("..... context: " + vertx.getOrCreateContext());
     testResponseBodyWriteString(false, null);
   }
 
   @Test
   public void testResponseBodyWriteStringNonChunkedUTF8() {
+    log.info("..... context: " + vertx.getOrCreateContext());
     testResponseBodyWriteString(false, "UTF-8");
   }
 
   @Test
   public void testResponseBodyWriteStringNonChunkedUTF16() {
+    log.info("..... context: " + vertx.getOrCreateContext());
     testResponseBodyWriteString(false, "UTF-16");
   }
 
@@ -1814,6 +1922,7 @@ public abstract class HttpTest extends HttpTestBase {
 
   @Test
   public void testResponseWrite() {
+    log.info("..... context: " + vertx.getOrCreateContext());
     Buffer body = TestUtils.randomBuffer(1000);
 
     server.requestHandler(req -> {
@@ -1838,6 +1947,7 @@ public abstract class HttpTest extends HttpTestBase {
 
   @Test
   public void testSendFile() throws Exception {
+    log.info("..... context: " + vertx.getOrCreateContext());
     String content = TestUtils.randomUnicodeString(10000);
     sendFile("test-send-file.html", content, false,
       () -> client.request(HttpMethod.GET, testAddress, DEFAULT_HTTP_PORT, DEFAULT_HTTP_HOST, DEFAULT_TEST_URI));
@@ -1845,6 +1955,7 @@ public abstract class HttpTest extends HttpTestBase {
 
   @Test
   public void testSendFileWithHandler() throws Exception {
+    log.info("..... context: " + vertx.getOrCreateContext());
     String content = TestUtils.randomUnicodeString(10000);
     sendFile("test-send-file.html", content, true,
       () -> client.request(HttpMethod.GET, testAddress, DEFAULT_HTTP_PORT, DEFAULT_HTTP_HOST, DEFAULT_TEST_URI));
@@ -1852,6 +1963,7 @@ public abstract class HttpTest extends HttpTestBase {
 
   @Test
   public void testSendFileWithConnectionCloseHeader() throws Exception {
+    log.info("..... context: " + vertx.getOrCreateContext());
     String content = TestUtils.randomUnicodeString(1024 * 1024 * 2);
     sendFile("test-send-file.html", content, false,
       () -> client
@@ -1887,6 +1999,7 @@ public abstract class HttpTest extends HttpTestBase {
 
   @Test
   public void testSendNonExistingFile() throws Exception {
+    log.info("..... context: " + vertx.getOrCreateContext());
     server.requestHandler(req -> {
       final Context ctx = vertx.getOrCreateContext();
       req.response().sendFile("/not/existing/path", event -> {
@@ -1913,6 +2026,7 @@ public abstract class HttpTest extends HttpTestBase {
 
   @Test
   public void testSendFileOverrideHeaders() throws Exception {
+    log.info("..... context: " + vertx.getOrCreateContext());
     String content = TestUtils.randomUnicodeString(10000);
     File file = setupFile("test-send-file.html", content);
 
@@ -1939,6 +2053,7 @@ public abstract class HttpTest extends HttpTestBase {
 
   @Test
   public void testSendFileNotFound() throws Exception {
+    log.info("..... context: " + vertx.getOrCreateContext());
 
     server.requestHandler(req -> {
       req.response().putHeader("Content-Type", "wibble");
@@ -1957,6 +2072,7 @@ public abstract class HttpTest extends HttpTestBase {
 
   @Test
   public void testSendFileNotFoundWithHandler() throws Exception {
+    log.info("..... context: " + vertx.getOrCreateContext());
 
     server.requestHandler(req -> {
       req.response().putHeader("Content-Type", "wibble");
@@ -1977,6 +2093,7 @@ public abstract class HttpTest extends HttpTestBase {
 
   @Test
   public void testSendFileDirectoryWithHandler() throws Exception {
+    log.info("..... context: " + vertx.getOrCreateContext());
 
     File dir = testFolder.newFolder();
 
@@ -1999,6 +2116,7 @@ public abstract class HttpTest extends HttpTestBase {
 
   @Test
   public void testSendOpenRangeFileFromClasspath() {
+    log.info("..... context: " + vertx.getOrCreateContext());
     server.requestHandler(res -> {
       res.response().sendFile("webroot/somefile.html", 6);
     }).listen(testAddress, onSuccess(res -> {
@@ -2015,6 +2133,7 @@ public abstract class HttpTest extends HttpTestBase {
 
   @Test
   public void testSendRangeFileFromClasspath() {
+    log.info("..... context: " + vertx.getOrCreateContext());
     server.requestHandler(res -> {
       res.response().sendFile("webroot/somefile.html", 6, 6);
     }).listen(testAddress, onSuccess(res -> {
@@ -2031,6 +2150,7 @@ public abstract class HttpTest extends HttpTestBase {
 
   @Test
   public void test100ContinueHandledAutomatically() {
+    log.info("..... context: " + vertx.getOrCreateContext());
     Buffer toSend = TestUtils.randomBuffer(1000);
 
     server.close();
@@ -2062,6 +2182,7 @@ public abstract class HttpTest extends HttpTestBase {
 
   @Test
   public void test100ContinueHandledManually() {
+    log.info("..... context: " + vertx.getOrCreateContext());
 
     Buffer toSend = TestUtils.randomBuffer(1000);
     server.requestHandler(req -> {
@@ -2092,6 +2213,7 @@ public abstract class HttpTest extends HttpTestBase {
 
   @Test
   public void test100ContinueRejectedManually() {
+    log.info("..... context: " + vertx.getOrCreateContext());
 
     server.requestHandler(req -> {
       req.response().setStatusCode(405).end();
@@ -2119,6 +2241,7 @@ public abstract class HttpTest extends HttpTestBase {
 
   @Test
   public void test100ContinueTimeout() throws Exception {
+    log.info("..... context: " + vertx.getOrCreateContext());
 
     waitFor(2);
 
@@ -2133,8 +2256,8 @@ public abstract class HttpTest extends HttpTestBase {
 
     client.request(HttpMethod.PUT, testAddress, DEFAULT_HTTP_PORT, DEFAULT_HTTP_HOST, DEFAULT_TEST_URI)
       .setHandler(onFailure(err -> {
-      complete();
-    }))
+        complete();
+      }))
       .exceptionHandler(err -> fail())
       .putHeader("Expect", "100-continue")
       .continueHandler(v -> complete())
@@ -2145,6 +2268,7 @@ public abstract class HttpTest extends HttpTestBase {
 
   @Test
   public void testClientDrainHandler() {
+    log.info("..... context: " + vertx.getOrCreateContext());
     pausingServer(resumeFuture -> {
       HttpClientRequest req = client.request(HttpMethod.GET, testAddress, DEFAULT_HTTP_PORT, DEFAULT_HTTP_HOST, DEFAULT_TEST_URI);
       req.setHandler(noOpHandler());
@@ -2191,6 +2315,7 @@ public abstract class HttpTest extends HttpTestBase {
 
   @Test
   public void testServerDrainHandler() {
+    log.info("..... context: " + vertx.getOrCreateContext());
     drainingServer(resumeFuture -> {
       client.request(HttpMethod.GET, testAddress, DEFAULT_HTTP_PORT, DEFAULT_HTTP_HOST, DEFAULT_TEST_URI)
         .setHandler(onSuccess(resp -> {
@@ -2233,13 +2358,14 @@ public abstract class HttpTest extends HttpTestBase {
 
   @Test
   public void testConnectionErrorsGetReportedToHandlers() throws InterruptedException {
+    log.info("..... context: " + vertx.getOrCreateContext());
     CountDownLatch latch = new CountDownLatch(4);
 
     // This one should cause an error in the Client Exception handler, because it has no exception handler set specifically.
     HttpClientRequest req1 = client.request(HttpMethod.GET, 9998, DEFAULT_HTTP_HOST, "someurl1")
       .setHandler(onFailure(resp -> {
-      latch.countDown();
-    }));
+        latch.countDown();
+      }));
 
     req1.exceptionHandler(t -> {
       latch.countDown();
@@ -2247,8 +2373,8 @@ public abstract class HttpTest extends HttpTestBase {
 
     HttpClientRequest req2 = client.request(HttpMethod.GET, 9997, DEFAULT_HTTP_HOST, "someurl2")
       .setHandler(onFailure(resp -> {
-      latch.countDown();
-    }));
+        latch.countDown();
+      }));
 
     AtomicInteger req2Exceptions = new AtomicInteger();
     req2.exceptionHandler(t -> {
@@ -2265,6 +2391,7 @@ public abstract class HttpTest extends HttpTestBase {
 
   @Test
   public void testRequestTimesoutWhenIndicatedPeriodExpiresWithoutAResponseFromRemoteServer() {
+    log.info("..... context: " + vertx.getOrCreateContext());
     server.requestHandler(noOpHandler()); // No response handler so timeout triggers
     AtomicBoolean failed = new AtomicBoolean();
     server.listen(testAddress, onSuccess(s -> {
@@ -2285,6 +2412,7 @@ public abstract class HttpTest extends HttpTestBase {
 
   @Test
   public void testRequestTimeoutCanceledWhenRequestHasAnOtherError() {
+    log.info("..... context: " + vertx.getOrCreateContext());
     AtomicReference<Throwable> exception = new AtomicReference<>();
     // There is no server running, should fail to connect
     client.request(HttpMethod.GET, DEFAULT_HTTP_PORT, DEFAULT_HTTP_HOST, DEFAULT_TEST_URI)
@@ -2303,6 +2431,7 @@ public abstract class HttpTest extends HttpTestBase {
 
   @Test
   public void testRequestTimeoutCanceledWhenRequestEndsNormally() {
+    log.info("..... context: " + vertx.getOrCreateContext());
     server.requestHandler(req -> req.response().end());
 
     server.listen(testAddress, onSuccess(s -> {
@@ -2326,6 +2455,7 @@ public abstract class HttpTest extends HttpTestBase {
 
   @Test
   public void testHttpClientRequestTimeoutResetsTheConnection() throws Exception {
+    log.info("..... context: " + vertx.getOrCreateContext());
     waitFor(3);
     server.requestHandler(req -> {
       AtomicBoolean errored = new AtomicBoolean();
@@ -2355,6 +2485,7 @@ public abstract class HttpTest extends HttpTestBase {
 
   @Test
   public void testConnectInvalidPort() {
+    log.info("..... context: " + vertx.getOrCreateContext());
     waitFor(2);
     client.request(HttpMethod.GET, 9998, DEFAULT_HTTP_HOST, DEFAULT_TEST_URI).setHandler(onFailure(err -> complete()))
       .exceptionHandler(t -> complete())
@@ -2364,6 +2495,7 @@ public abstract class HttpTest extends HttpTestBase {
 
   @Test
   public void testConnectInvalidHost() {
+    log.info("..... context: " + vertx.getOrCreateContext());
     waitFor(2);
     client.request(HttpMethod.GET, 9998, "255.255.255.255", DEFAULT_TEST_URI).setHandler(onFailure(resp -> complete()))
       .exceptionHandler(t -> complete())
@@ -2373,6 +2505,7 @@ public abstract class HttpTest extends HttpTestBase {
 
   @Test
   public void testSetHandlersAfterListening() {
+    log.info("..... context: " + vertx.getOrCreateContext());
     server.requestHandler(noOpHandler());
 
     server.listen(testAddress, onSuccess(s -> {
@@ -2386,6 +2519,7 @@ public abstract class HttpTest extends HttpTestBase {
 
   @Test
   public void testSetHandlersAfterListening2() {
+    log.info("..... context: " + vertx.getOrCreateContext());
     server.requestHandler(noOpHandler());
 
     server.listen(testAddress, onSuccess(v -> testComplete()));
@@ -2396,17 +2530,20 @@ public abstract class HttpTest extends HttpTestBase {
 
   @Test
   public void testListenNoHandlers() {
+    log.info("..... context: " + vertx.getOrCreateContext());
     assertIllegalStateException(() -> server.listen(ar -> {
     }));
   }
 
   @Test
   public void testListenNoHandlers2() {
+    log.info("..... context: " + vertx.getOrCreateContext());
     assertIllegalStateException(() -> server.listen());
   }
 
   @Test
   public void testListenTwice() {
+    log.info("..... context: " + vertx.getOrCreateContext());
     server.requestHandler(noOpHandler());
     server.listen(testAddress, onSuccess(v -> testComplete()));
     assertIllegalStateException(() -> server.listen());
@@ -2415,6 +2552,7 @@ public abstract class HttpTest extends HttpTestBase {
 
   @Test
   public void testListenTwice2() {
+    log.info("..... context: " + vertx.getOrCreateContext());
     server.requestHandler(noOpHandler());
     server.listen(testAddress, onSuccess(s -> {
       assertIllegalStateException(() -> server.listen());
@@ -2425,6 +2563,7 @@ public abstract class HttpTest extends HttpTestBase {
 
   @Test
   public void testHeadCanSetContentLength() throws Exception {
+    log.info("..... context: " + vertx.getOrCreateContext());
     server.requestHandler(req -> {
       assertEquals(HttpMethod.HEAD, req.method());
       // Head never contains a body but it can contain a Content-Length header
@@ -2450,6 +2589,7 @@ public abstract class HttpTest extends HttpTestBase {
 
   @Test
   public void testHeadDoesNotSetAutomaticallySetContentLengthHeader() throws Exception {
+    log.info("..... context: " + vertx.getOrCreateContext());
     MultiMap respHeaders = checkEmptyHttpResponse(HttpMethod.HEAD, 200, HttpHeaders.headers());
     assertNull(respHeaders.get("content-length"));
     assertNull(respHeaders.get("transfer-encoding"));
@@ -2457,6 +2597,7 @@ public abstract class HttpTest extends HttpTestBase {
 
   @Test
   public void testHeadAllowsContentLengthHeader() throws Exception {
+    log.info("..... context: " + vertx.getOrCreateContext());
     MultiMap respHeaders = checkEmptyHttpResponse(HttpMethod.HEAD, 200, HttpHeaders.set("content-length", "34"));
     assertEquals("34", respHeaders.get("content-length"));
     assertNull(respHeaders.get("transfer-encoding"));
@@ -2464,6 +2605,7 @@ public abstract class HttpTest extends HttpTestBase {
 
   @Test
   public void testHeadRemovesTransferEncodingHeader() throws Exception {
+    log.info("..... context: " + vertx.getOrCreateContext());
     MultiMap respHeaders = checkEmptyHttpResponse(HttpMethod.HEAD, 200, HttpHeaders.set("transfer-encoding", "chunked"));
     assertNull(respHeaders.get("content-length"));
     assertNull(respHeaders.get("transfer-encoding"));
@@ -2471,6 +2613,7 @@ public abstract class HttpTest extends HttpTestBase {
 
   @Test
   public void testNoContentRemovesContentLengthHeader() throws Exception {
+    log.info("..... context: " + vertx.getOrCreateContext());
     MultiMap respHeaders = checkEmptyHttpResponse(HttpMethod.GET, 204, HttpHeaders.set("content-length", "34"));
     assertNull(respHeaders.get("content-length"));
     assertNull(respHeaders.get("transfer-encoding"));
@@ -2478,6 +2621,7 @@ public abstract class HttpTest extends HttpTestBase {
 
   @Test
   public void testNoContentRemovesTransferEncodingHeader() throws Exception {
+    log.info("..... context: " + vertx.getOrCreateContext());
     MultiMap respHeaders = checkEmptyHttpResponse(HttpMethod.GET, 204, HttpHeaders.set("transfer-encoding", "chunked"));
     assertNull(respHeaders.get("content-length"));
     assertNull(respHeaders.get("transfer-encoding"));
@@ -2485,6 +2629,7 @@ public abstract class HttpTest extends HttpTestBase {
 
   @Test
   public void testResetContentSetsContentLengthHeader() throws Exception {
+    log.info("..... context: " + vertx.getOrCreateContext());
     MultiMap respHeaders = checkEmptyHttpResponse(HttpMethod.GET, 205, HttpHeaders.headers());
     assertEquals("0", respHeaders.get("content-length"));
     assertNull(respHeaders.get("transfer-encoding"));
@@ -2492,6 +2637,7 @@ public abstract class HttpTest extends HttpTestBase {
 
   @Test
   public void testResetContentRemovesTransferEncodingHeader() throws Exception {
+    log.info("..... context: " + vertx.getOrCreateContext());
     MultiMap respHeaders = checkEmptyHttpResponse(HttpMethod.GET, 205, HttpHeaders.set("transfer-encoding", "chunked"));
     assertEquals("0", respHeaders.get("content-length"));
     assertNull(respHeaders.get("transfer-encoding"));
@@ -2499,6 +2645,7 @@ public abstract class HttpTest extends HttpTestBase {
 
   @Test
   public void testNotModifiedDoesNotSetAutomaticallySetContentLengthHeader() throws Exception {
+    log.info("..... context: " + vertx.getOrCreateContext());
     MultiMap respHeaders = checkEmptyHttpResponse(HttpMethod.GET, 304, HttpHeaders.headers());
     assertNull(respHeaders.get("content-length"));
     assertNull(respHeaders.get("transfer-encoding"));
@@ -2506,6 +2653,7 @@ public abstract class HttpTest extends HttpTestBase {
 
   @Test
   public void testNotModifiedAllowsContentLengthHeader() throws Exception {
+    log.info("..... context: " + vertx.getOrCreateContext());
     MultiMap respHeaders = checkEmptyHttpResponse(HttpMethod.GET, 304, HttpHeaders.set("content-length", "34"));
     assertEquals("34", respHeaders.get("Content-Length"));
     assertNull(respHeaders.get("transfer-encoding"));
@@ -2513,6 +2661,7 @@ public abstract class HttpTest extends HttpTestBase {
 
   @Test
   public void testNotModifiedRemovesTransferEncodingHeader() throws Exception {
+    log.info("..... context: " + vertx.getOrCreateContext());
     MultiMap respHeaders = checkEmptyHttpResponse(HttpMethod.GET, 304, HttpHeaders.set("transfer-encoding", "chunked"));
     assertNull(respHeaders.get("content-length"));
     assertNull(respHeaders.get("transfer-encoding"));
@@ -2520,6 +2669,7 @@ public abstract class HttpTest extends HttpTestBase {
 
   @Test
   public void test1xxRemovesContentLengthHeader() throws Exception {
+    log.info("..... context: " + vertx.getOrCreateContext());
     MultiMap respHeaders = checkEmptyHttpResponse(HttpMethod.GET, 102, HttpHeaders.set("content-length", "34"));
     assertNull(respHeaders.get("content-length"));
     assertNull(respHeaders.get("transfer-encoding"));
@@ -2527,6 +2677,7 @@ public abstract class HttpTest extends HttpTestBase {
 
   @Test
   public void test1xxRemovesTransferEncodingHeader() throws Exception {
+    log.info("..... context: " + vertx.getOrCreateContext());
     MultiMap respHeaders = checkEmptyHttpResponse(HttpMethod.GET, 102, HttpHeaders.set("transfer-encoding", "chunked"));
     assertNull(respHeaders.get("content-length"));
     assertNull(respHeaders.get("transfer-encoding"));
@@ -2565,6 +2716,7 @@ public abstract class HttpTest extends HttpTestBase {
 
   @Test
   public void testHeadHasNoContentLengthByDefault() {
+    log.info("..... context: " + vertx.getOrCreateContext());
     server.requestHandler(req -> {
       assertEquals(HttpMethod.HEAD, req.method());
       // By default HEAD does not have a content-length header
@@ -2584,6 +2736,7 @@ public abstract class HttpTest extends HttpTestBase {
 
   @Test
   public void testHeadButCanSetContentLength() {
+    log.info("..... context: " + vertx.getOrCreateContext());
     server.requestHandler(req -> {
       assertEquals(HttpMethod.HEAD, req.method());
       // By default HEAD does not have a content-length header but it can contain a content-length header
@@ -2604,6 +2757,7 @@ public abstract class HttpTest extends HttpTestBase {
 
   @Test
   public void testRemoteAddress() {
+    log.info("..... context: " + vertx.getOrCreateContext());
     server.requestHandler(req -> {
       if (testAddress.isInetSocket()) {
         assertEquals("127.0.0.1", req.remoteAddress().host());
@@ -2624,6 +2778,7 @@ public abstract class HttpTest extends HttpTestBase {
 
   @Test
   public void testGetAbsoluteURI() {
+    log.info("..... context: " + vertx.getOrCreateContext());
     server.requestHandler(req -> {
       assertEquals(req.scheme() + "://localhost:" + DEFAULT_HTTP_PORT + "/foo/bar", req.absoluteURI());
       req.response().end();
@@ -2640,6 +2795,7 @@ public abstract class HttpTest extends HttpTestBase {
 
   @Test
   public void testListenInvalidPort() throws Exception {
+    log.info("..... context: " + vertx.getOrCreateContext());
     /* Port 7 is free for use by any application in Windows, so this test fails. */
     Assume.assumeFalse(System.getProperty("os.name").startsWith("Windows"));
     server.close();
@@ -2650,6 +2806,7 @@ public abstract class HttpTest extends HttpTestBase {
 
   @Test
   public void testListenInvalidHost() {
+    log.info("..... context: " + vertx.getOrCreateContext());
     server.close();
     server = vertx.createHttpServer(new HttpServerOptions().setPort(DEFAULT_HTTP_PORT).setHost("iqwjdoqiwjdoiqwdiojwd"));
     server.requestHandler(noOpHandler());
@@ -2658,6 +2815,7 @@ public abstract class HttpTest extends HttpTestBase {
 
   @Test
   public void testPauseResumeClientResponseWontCallEndHandlePrematurely() throws Exception {
+    log.info("..... context: " + vertx.getOrCreateContext());
     Buffer expected = Buffer.buffer(TestUtils.randomAlphaString(8192));
     server.requestHandler(req -> {
       req.response().end(expected);
@@ -2679,6 +2837,7 @@ public abstract class HttpTest extends HttpTestBase {
 
   @Test
   public void testPauseClientResponse() {
+    log.info("..... context: " + vertx.getOrCreateContext());
     int numWrites = 10;
     int numBytes = 100;
     server.requestHandler(req -> {
@@ -2711,11 +2870,11 @@ public abstract class HttpTest extends HttpTestBase {
             testComplete();
           }
         });
-      vertx.setTimer(500, id -> {
-        paused.set(false);
-        resp.resume();
-      });
-    }));
+        vertx.setTimer(500, id -> {
+          paused.set(false);
+          resp.resume();
+        });
+      }));
 
     server.listen(testAddress, onSuccess(s -> clientRequest.end()));
 
@@ -2724,11 +2883,13 @@ public abstract class HttpTest extends HttpTestBase {
 
   @Test
   public void testDeliverPausedBufferWhenResume() throws Exception {
+    log.info("..... context: " + vertx.getOrCreateContext());
     testDeliverPausedBufferWhenResume(block -> vertx.setTimer(10, id -> block.run()));
   }
 
   @Test
   public void testDeliverPausedBufferWhenResumeOnOtherThread() throws Exception {
+    log.info("..... context: " + vertx.getOrCreateContext());
     ExecutorService exec = Executors.newSingleThreadExecutor();
     try {
       testDeliverPausedBufferWhenResume(block -> exec.execute(() -> {
@@ -2789,6 +2950,7 @@ public abstract class HttpTest extends HttpTestBase {
 
   @Test
   public void testClearPausedBuffersWhenResponseEnds() throws Exception {
+    log.info("..... context: " + vertx.getOrCreateContext());
     Buffer data = TestUtils.randomBuffer(20);
     int num = 10;
     waitFor(num);
@@ -2817,6 +2979,7 @@ public abstract class HttpTest extends HttpTestBase {
 
   @Test
   public void testPausedHttpServerRequest() throws Exception {
+    log.info("..... context: " + vertx.getOrCreateContext());
     CompletableFuture<Void> resumeCF = new CompletableFuture<>();
     Buffer expected = Buffer.buffer();
     server.requestHandler(req -> {
@@ -2857,11 +3020,13 @@ public abstract class HttpTest extends HttpTestBase {
 
   @Test
   public void testHttpServerRequestPausedDuringLastChunk1() throws Exception {
+    log.info("..... context: " + vertx.getOrCreateContext());
     testHttpServerRequestPausedDuringLastChunk(false);
   }
 
   @Test
   public void testHttpServerRequestPausedDuringLastChunk2() throws Exception {
+    log.info("..... context: " + vertx.getOrCreateContext());
     testHttpServerRequestPausedDuringLastChunk(true);
   }
 
@@ -2902,11 +3067,13 @@ public abstract class HttpTest extends HttpTestBase {
 
   @Test
   public void testHttpClientResponsePausedDuringLastChunk1() throws Exception {
+    log.info("..... context: " + vertx.getOrCreateContext());
     testHttpClientResponsePausedDuringLastChunk(false);
   }
 
   @Test
   public void testHttpClientResponsePausedDuringLastChunk2() throws Exception {
+    log.info("..... context: " + vertx.getOrCreateContext());
     testHttpClientResponsePausedDuringLastChunk(true);
   }
 
@@ -2947,81 +3114,97 @@ public abstract class HttpTest extends HttpTestBase {
 
   @Test
   public void testFormUploadEmptyFile() {
+    log.info("..... context: " + vertx.getOrCreateContext());
     testFormUploadFile("", false, false);
   }
 
   @Test
   public void testFormUploadSmallFile() {
+    log.info("..... context: " + vertx.getOrCreateContext());
     testFormUploadFile(TestUtils.randomAlphaString(100), false, false);
   }
 
   @Test
   public void testFormUploadMediumFile() {
+    log.info("..... context: " + vertx.getOrCreateContext());
     testFormUploadFile(TestUtils.randomAlphaString(20000), false, false);
   }
 
   @Test
   public void testFormUploadLargeFile() {
+    log.info("..... context: " + vertx.getOrCreateContext());
     testFormUploadFile(TestUtils.randomAlphaString(4 * 1024 * 1024), false, false);
   }
 
   @Test
   public void testFormUploadEmptyFileStreamToDisk() {
+    log.info("..... context: " + vertx.getOrCreateContext());
     testFormUploadFile("", true, false);
   }
 
   @Test
   public void testFormUploadSmallFileStreamToDisk() {
+    log.info("..... context: " + vertx.getOrCreateContext());
     testFormUploadFile(TestUtils.randomAlphaString(100), true, false);
   }
 
   @Test
   public void testFormUploadMediumFileStreamToDisk() {
+    log.info("..... context: " + vertx.getOrCreateContext());
     testFormUploadFile(TestUtils.randomAlphaString(20 * 1024), true, false);
   }
 
   @Test
   public void testFormUploadLargeFileStreamToDisk() {
+    log.info("..... context: " + vertx.getOrCreateContext());
     testFormUploadFile(TestUtils.randomAlphaString(4 * 1024 * 1024), true, false);
   }
 
   @Test
   public void testBrokenFormUploadEmptyFile() {
+    log.info("..... context: " + vertx.getOrCreateContext());
     testFormUploadFile("", true, true);
   }
 
   @Test
   public void testBrokenFormUploadSmallFile() {
+    log.info("..... context: " + vertx.getOrCreateContext());
     testFormUploadFile(TestUtils.randomAlphaString(100), true, true);
   }
 
   @Test
   public void testBrokenFormUploadMediumFile() {
+    log.info("..... context: " + vertx.getOrCreateContext());
     testFormUploadFile(TestUtils.randomAlphaString(20 * 1024), true, true);
   }
 
   @Test
   public void testBrokenFormUploadLargeFile() {
+    log.info("..... context: " + vertx.getOrCreateContext());
     testFormUploadFile(TestUtils.randomAlphaString(4 * 1024 * 1024), true, true);
   }
 
   @Test
   public void testBrokenFormUploadEmptyFileStreamToDisk() {
+    log.info("..... context: " + vertx.getOrCreateContext());
     testFormUploadFile("", true, true);
   }
 
   @Test
   public void testBrokenFormUploadSmallFileStreamToDisk() {
+    log.info("..... context: " + vertx.getOrCreateContext());
     testFormUploadFile(TestUtils.randomAlphaString(100), true, true);
   }
 
   @Test
   public void testBrokenFormUploadMediumFileStreamToDisk() {
+    log.info("..... context: " + vertx.getOrCreateContext());
     testFormUploadFile(TestUtils.randomAlphaString(20 * 1024), true, true);
   }
 
   @Test
   public void testBrokenFormUploadLargeFileStreamToDisk() {
+    log.info("..... context: " + vertx.getOrCreateContext());
     testFormUploadFile(TestUtils.randomAlphaString(4 * 1024 * 1024), true, true);
   }
 
@@ -3139,6 +3322,7 @@ public abstract class HttpTest extends HttpTestBase {
 
   @Test
   public void testFormUploadAttributes() {
+    log.info("..... context: " + vertx.getOrCreateContext());
     AtomicInteger attributeCount = new AtomicInteger();
     server.requestHandler(req -> {
       if (req.method() == HttpMethod.POST) {
@@ -3188,6 +3372,7 @@ public abstract class HttpTest extends HttpTestBase {
 
   @Test
   public void testFormUploadAttributes2() {
+    log.info("..... context: " + vertx.getOrCreateContext());
     AtomicInteger attributeCount = new AtomicInteger();
     server.requestHandler(req -> {
       if (req.method() == HttpMethod.POST) {
@@ -3230,6 +3415,7 @@ public abstract class HttpTest extends HttpTestBase {
 
   @Test
   public void testHostHeaderOverridePossible() {
+    log.info("..... context: " + vertx.getOrCreateContext());
     server.requestHandler(req -> {
       assertEquals("localhost:4444", req.host());
       req.response().end();
@@ -3247,6 +3433,7 @@ public abstract class HttpTest extends HttpTestBase {
 
   @Test
   public void testResponseBodyWriteFixedString() {
+    log.info("..... context: " + vertx.getOrCreateContext());
     String body = "Lorem ipsum dolor sit amet, consectetur adipisicing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.";
     Buffer bodyBuff = Buffer.buffer(body);
 
@@ -3272,6 +3459,7 @@ public abstract class HttpTest extends HttpTestBase {
 
   @Test
   public void testResponseDataTimeout() {
+    log.info("..... context: " + vertx.getOrCreateContext());
     waitFor(2);
     Buffer expected = TestUtils.randomBuffer(1000);
     server.requestHandler(req -> {
@@ -3299,7 +3487,7 @@ public abstract class HttpTest extends HttpTestBase {
         if (count.getAndIncrement() == 0) {
           assertTrue(
             t instanceof TimeoutException || /* HTTP/1 */
-            t instanceof VertxException /* HTTP/2: connection closed */);
+              t instanceof VertxException /* HTTP/2: connection closed */);
           assertEquals(expected, received);
           complete();
         }
@@ -3311,6 +3499,7 @@ public abstract class HttpTest extends HttpTestBase {
 
   @Test
   public void testClientMultiThreaded() throws Exception {
+    log.info("..... context: " + vertx.getOrCreateContext());
     int numThreads = 10;
     Thread[] threads = new Thread[numThreads];
     CountDownLatch latch = new CountDownLatch(numThreads);
@@ -3343,6 +3532,7 @@ public abstract class HttpTest extends HttpTestBase {
 
   @Test
   public void testInVerticle() throws Exception {
+    log.info("..... context: " + vertx.getOrCreateContext());
     testInVerticle(false);
   }
 
@@ -3394,6 +3584,7 @@ public abstract class HttpTest extends HttpTestBase {
 
   @Test
   public void testWorkerServer() throws Exception {
+    log.info("..... context: " + vertx.getOrCreateContext());
     int numReq = 5; // 5 == the HTTP/1 pool max size
     waitFor(numReq);
     CyclicBarrier barrier = new CyclicBarrier(numReq);
@@ -3444,6 +3635,7 @@ public abstract class HttpTest extends HttpTestBase {
 
   @Test
   public void testMultipleServerClose() {
+    log.info("..... context: " + vertx.getOrCreateContext());
     this.server = vertx.createHttpServer(new HttpServerOptions().setPort(DEFAULT_HTTP_PORT));
     AtomicInteger times = new AtomicInteger();
     // We assume the endHandler and the close completion handler are invoked in the same context task
@@ -3469,6 +3661,7 @@ public abstract class HttpTest extends HttpTestBase {
 
   @Test
   public void testRequestEnded() {
+    log.info("..... context: " + vertx.getOrCreateContext());
     server.requestHandler(req -> {
       assertFalse(req.isEnded());
       req.endHandler(v -> {
@@ -3516,6 +3709,7 @@ public abstract class HttpTest extends HttpTestBase {
 
   @Test
   public void testRequestEndedNoEndHandler() {
+    log.info("..... context: " + vertx.getOrCreateContext());
     server.requestHandler(req -> {
       assertFalse(req.isEnded());
       req.response().setStatusCode(200).end();
@@ -3563,6 +3757,7 @@ public abstract class HttpTest extends HttpTestBase {
 
   @Test
   public void testAbsoluteURIServer() {
+    log.info("..... context: " + vertx.getOrCreateContext());
     server.close();
     // Listen on all addresses
     server = vertx.createHttpServer(createBaseServerOptions().setHost("0.0.0.0"));
@@ -3587,6 +3782,7 @@ public abstract class HttpTest extends HttpTestBase {
 
   @Test
   public void testDumpManyRequestsOnQueue() throws Exception {
+    log.info("..... context: " + vertx.getOrCreateContext());
     int sendRequests = 10000;
     AtomicInteger receivedRequests = new AtomicInteger();
     HttpClientOptions ops = createBaseClientOptions()
@@ -3612,6 +3808,7 @@ public abstract class HttpTest extends HttpTestBase {
 
   @Test
   public void testOtherMethodRequest() {
+    log.info("..... context: " + vertx.getOrCreateContext());
     server.requestHandler(r -> {
       assertEquals("COPY", r.method().name());
       r.response().end();
@@ -3627,6 +3824,7 @@ public abstract class HttpTest extends HttpTestBase {
 
   @Test
   public void testClientGlobalConnectionHandler() throws Exception {
+    log.info("..... context: " + vertx.getOrCreateContext());
     server.requestHandler(req -> {
       req.response().end();
     });
@@ -3644,6 +3842,7 @@ public abstract class HttpTest extends HttpTestBase {
 
   @Test
   public void testServerConnectionHandler() throws Exception {
+    log.info("..... context: " + vertx.getOrCreateContext());
     AtomicInteger status = new AtomicInteger();
     AtomicReference<HttpConnection> connRef = new AtomicReference<>();
     Context serverCtx = vertx.getOrCreateContext();
@@ -3668,6 +3867,7 @@ public abstract class HttpTest extends HttpTestBase {
 
   @Test
   public void testServerConnectionHandlerClose() throws Exception {
+    log.info("..... context: " + vertx.getOrCreateContext());
     waitFor(2);
     Context serverCtx = vertx.getOrCreateContext();
     server.connectionHandler(conn -> {
@@ -3693,6 +3893,7 @@ public abstract class HttpTest extends HttpTestBase {
 
   @Test
   public void testClientConnectionClose() throws Exception {
+    log.info("..... context: " + vertx.getOrCreateContext());
     // Test client connection close + server close handler
     CountDownLatch latch = new CountDownLatch(1);
     server.requestHandler(req -> {
@@ -3718,6 +3919,7 @@ public abstract class HttpTest extends HttpTestBase {
 
   @Test
   public void testServerConnectionClose() throws Exception {
+    log.info("..... context: " + vertx.getOrCreateContext());
     // Test server connection close + client close handler
     server.requestHandler(req -> {
       req.connection().close();
@@ -3736,12 +3938,14 @@ public abstract class HttpTest extends HttpTestBase {
 
   @Test
   public void testNoLogging() throws Exception {
+    log.info("..... context: " + vertx.getOrCreateContext());
     TestLoggerFactory factory = testLogging();
     assertFalse(factory.hasName("io.netty.handler.codec.http2.Http2FrameLogger"));
   }
 
   @Test
   public void testServerLogging() throws Exception {
+    log.info("..... context: " + vertx.getOrCreateContext());
     server.close();
     server = vertx.createHttpServer(createBaseServerOptions().setLogActivity(true));
     TestLoggerFactory factory = testLogging();
@@ -3754,6 +3958,7 @@ public abstract class HttpTest extends HttpTestBase {
 
   @Test
   public void testClientLogging() throws Exception {
+    log.info("..... context: " + vertx.getOrCreateContext());
     client.close();
     client = vertx.createHttpClient(createBaseClientOptions().setLogActivity(true));
     TestLoggerFactory factory = testLogging();
@@ -3766,6 +3971,7 @@ public abstract class HttpTest extends HttpTestBase {
 
   @Test
   public void testClientLocalAddress() throws Exception {
+    log.info("..... context: " + vertx.getOrCreateContext());
     String expectedAddress = TestUtils.loopbackAddress();
     client.close();
     client = vertx.createHttpClient(createBaseClientOptions().setLocalAddress(expectedAddress));
@@ -3785,97 +3991,114 @@ public abstract class HttpTest extends HttpTestBase {
 
   @Test
   public void testFollowRedirectGetOn301() throws Exception {
+    log.info("..... context: " + vertx.getOrCreateContext());
     testFollowRedirect(HttpMethod.GET, HttpMethod.GET, 301, 200, 2, "http://localhost:8080/redirected", "http://localhost:8080/redirected");
   }
 
   @Test
   public void testFollowRedirectPostOn301() throws Exception {
+    log.info("..... context: " + vertx.getOrCreateContext());
     testFollowRedirect(HttpMethod.POST, HttpMethod.GET, 301, 301, 1, "http://localhost:8080/redirected", "http://localhost:8080/somepath");
   }
 
   @Test
   public void testFollowRedirectPutOn301() throws Exception {
+    log.info("..... context: " + vertx.getOrCreateContext());
     testFollowRedirect(HttpMethod.PUT, HttpMethod.GET, 301, 301, 1, "http://localhost:8080/redirected", "http://localhost:8080/somepath");
   }
 
   @Test
   public void testFollowRedirectGetOn302() throws Exception {
+    log.info("..... context: " + vertx.getOrCreateContext());
     testFollowRedirect(HttpMethod.GET, HttpMethod.GET, 302, 200, 2, "http://localhost:8080/redirected", "http://localhost:8080/redirected");
   }
 
   @Test
   public void testFollowRedirectPostOn302() throws Exception {
+    log.info("..... context: " + vertx.getOrCreateContext());
     testFollowRedirect(HttpMethod.POST, HttpMethod.GET, 302, 302, 1, "http://localhost:8080/redirected", "http://localhost:8080/somepath");
   }
 
   @Test
   public void testFollowRedirectPutOn302() throws Exception {
+    log.info("..... context: " + vertx.getOrCreateContext());
     testFollowRedirect(HttpMethod.PUT, HttpMethod.GET, 302, 302, 1, "http://localhost:8080/redirected", "http://localhost:8080/somepath");
   }
 
   @Test
   public void testFollowRedirectGetOn303() throws Exception {
+    log.info("..... context: " + vertx.getOrCreateContext());
     testFollowRedirect(HttpMethod.GET, HttpMethod.GET, 303, 200, 2, "http://localhost:8080/redirected", "http://localhost:8080/redirected");
   }
 
   @Test
   public void testFollowRedirectPostOn303() throws Exception {
+    log.info("..... context: " + vertx.getOrCreateContext());
     testFollowRedirect(HttpMethod.POST, HttpMethod.GET, 303, 200, 2, "http://localhost:8080/redirected", "http://localhost:8080/redirected");
   }
 
   @Test
   public void testFollowRedirectPutOn303() throws Exception {
+    log.info("..... context: " + vertx.getOrCreateContext());
     testFollowRedirect(HttpMethod.PUT, HttpMethod.GET, 303, 200, 2, "http://localhost:8080/redirected", "http://localhost:8080/redirected");
   }
 
   @Test
   public void testFollowRedirectNotOn304() throws Exception {
+    log.info("..... context: " + vertx.getOrCreateContext());
     testFollowRedirect(HttpMethod.GET, HttpMethod.GET, 304, 304, 1, "http://localhost:8080/redirected", "http://localhost:8080/somepath");
   }
 
   @Test
   public void testFollowRedirectGetOn307() throws Exception {
+    log.info("..... context: " + vertx.getOrCreateContext());
     testFollowRedirect(HttpMethod.GET, HttpMethod.GET, 307, 200, 2, "http://localhost:8080/redirected", "http://localhost:8080/redirected");
   }
 
   @Test
   public void testFollowRedirectPostOn307() throws Exception {
+    log.info("..... context: " + vertx.getOrCreateContext());
     testFollowRedirect(HttpMethod.POST, HttpMethod.POST, 307, 307, 1, "http://localhost:8080/redirected", "http://localhost:8080/somepath");
   }
 
   @Test
   public void testFollowRedirectPutOn307() throws Exception {
+    log.info("..... context: " + vertx.getOrCreateContext());
     testFollowRedirect(HttpMethod.PUT, HttpMethod.PUT, 307, 307, 1, "http://localhost:8080/redirected", "http://localhost:8080/somepath");
   }
 
   @Test
   public void testFollowRedirectWithRelativeLocation() throws Exception {
+    log.info("..... context: " + vertx.getOrCreateContext());
     testFollowRedirect(HttpMethod.GET, HttpMethod.GET, 301, 200, 2, "/another", "http://localhost:8080/another");
   }
 
   @Test
   public void testFollowRedirectGetOn308() throws Exception {
+    log.info("..... context: " + vertx.getOrCreateContext());
     testFollowRedirect(HttpMethod.GET, HttpMethod.GET, 308, 200, 2, "http://localhost:8080/redirected", "http://localhost:8080/redirected");
   }
 
   @Test
   public void testFollowRedirectPostOn308() throws Exception {
+    log.info("..... context: " + vertx.getOrCreateContext());
     testFollowRedirect(HttpMethod.POST, HttpMethod.POST, 308, 308, 1, "http://localhost:8080/redirected", "http://localhost:8080/somepath");
   }
 
   @Test
   public void testFollowRedirectPutOn308() throws Exception {
+    log.info("..... context: " + vertx.getOrCreateContext());
     testFollowRedirect(HttpMethod.PUT, HttpMethod.PUT, 308, 308, 1, "http://localhost:8080/redirected", "http://localhost:8080/somepath");
   }
 
   private void testFollowRedirect(
-      HttpMethod method,
-      HttpMethod expectedMethod,
-      int statusCode,
-      int expectedStatus,
-      int expectedRequests,
-      String location,
-      String expectedURI) throws Exception {
+    HttpMethod method,
+    HttpMethod expectedMethod,
+    int statusCode,
+    int expectedStatus,
+    int expectedRequests,
+    String location,
+    String expectedURI) throws Exception {
     String s;
     if (createBaseServerOptions().isSsl() && location.startsWith("http://")) {
       s = "https://" + location.substring("http://".length());
@@ -3920,11 +4143,13 @@ public abstract class HttpTest extends HttpTestBase {
 
   @Test
   public void testFollowRedirectWithBody() throws Exception {
+    log.info("..... context: " + vertx.getOrCreateContext());
     testFollowRedirectWithBody(Function.identity());
   }
 
   @Test
   public void testFollowRedirectWithPaddedBody() throws Exception {
+    log.info("..... context: " + vertx.getOrCreateContext());
     testFollowRedirectWithBody(buff -> TestUtils.leftPad(1, buff));
   }
 
@@ -3958,6 +4183,7 @@ public abstract class HttpTest extends HttpTestBase {
 
   @Test
   public void testFollowRedirectWithChunkedBody() throws Exception {
+    log.info("..... context: " + vertx.getOrCreateContext());
     Buffer buff1 = Buffer.buffer(TestUtils.randomAlphaString(2048));
     Buffer buff2 = Buffer.buffer(TestUtils.randomAlphaString(2048));
     Buffer expected = Buffer.buffer().appendBuffer(buff1).appendBuffer(buff2);
@@ -3983,9 +4209,9 @@ public abstract class HttpTest extends HttpTestBase {
     startServer();
     HttpClientRequest req = client.request(HttpMethod.PUT, DEFAULT_HTTP_PORT, DEFAULT_HTTP_HOST, "/somepath")
       .setHandler(onSuccess(resp -> {
-      assertEquals(200, resp.statusCode());
-      testComplete();
-    })).setFollowRedirects(true)
+        assertEquals(200, resp.statusCode());
+        testComplete();
+      })).setFollowRedirects(true)
       .setChunked(true);
     req.write(buff1);
     awaitLatch(latch);
@@ -3995,11 +4221,13 @@ public abstract class HttpTest extends HttpTestBase {
 
   @Test
   public void testFollowRedirectWithRequestNotEnded() throws Exception {
+    log.info("..... context: " + vertx.getOrCreateContext());
     testFollowRedirectWithRequestNotEnded(false);
   }
 
   @Test
   public void testFollowRedirectWithRequestNotEndedFailing() throws Exception {
+    log.info("..... context: " + vertx.getOrCreateContext());
     testFollowRedirectWithRequestNotEnded(true);
   }
 
@@ -4066,6 +4294,7 @@ public abstract class HttpTest extends HttpTestBase {
 
   @Test
   public void testFollowRedirectSendHeadThenBody() throws Exception {
+    log.info("..... context: " + vertx.getOrCreateContext());
     Buffer expected = Buffer.buffer(TestUtils.randomAlphaString(2048));
     AtomicBoolean redirected = new AtomicBoolean();
     server.requestHandler(req -> {
@@ -4097,6 +4326,7 @@ public abstract class HttpTest extends HttpTestBase {
 
   @Test
   public void testFollowRedirectLimit() throws Exception {
+    log.info("..... context: " + vertx.getOrCreateContext());
     AtomicInteger redirects = new AtomicInteger();
     server.requestHandler(req -> {
       int val = redirects.incrementAndGet();
@@ -4123,6 +4353,7 @@ public abstract class HttpTest extends HttpTestBase {
 
   @Test
   public void testFollowRedirectPropagatesTimeout() throws Exception {
+    log.info("..... context: " + vertx.getOrCreateContext());
     AtomicInteger redirections = new AtomicInteger();
     server.requestHandler(req -> {
       switch (redirections.getAndIncrement()) {
@@ -4150,6 +4381,7 @@ public abstract class HttpTest extends HttpTestBase {
 
   @Test
   public void testFollowRedirectHost() throws Exception {
+    log.info("..... context: " + vertx.getOrCreateContext());
     String scheme = createBaseClientOptions().isSsl() ? "https" : "http";
     waitFor(2);
     HttpServerOptions options = createBaseServerOptions();
@@ -4182,6 +4414,7 @@ public abstract class HttpTest extends HttpTestBase {
 
   @Test
   public void testFollowRedirectWithCustomHandler() throws Exception {
+    log.info("..... context: " + vertx.getOrCreateContext());
     String scheme = createBaseClientOptions().isSsl() ? "https" : "http";
     waitFor(2);
     HttpServerOptions options = createBaseServerOptions();
@@ -4225,6 +4458,7 @@ public abstract class HttpTest extends HttpTestBase {
 
   @Test
   public void testDefaultRedirectHandler() throws Exception {
+    log.info("..... context: " + vertx.getOrCreateContext());
     testFoo("http://example.com", "http://example.com");
     testFoo("http://example.com/somepath", "http://example.com/somepath");
     testFoo("http://example.com:8000", "http://example.com:8000");
@@ -4338,6 +4572,7 @@ public abstract class HttpTest extends HttpTestBase {
 
   @Test
   public void testFollowRedirectEncodedParams() throws Exception {
+    log.info("..... context: " + vertx.getOrCreateContext());
     String value1 = "\ud55c\uae00", value2 = "A B+C", value3 = "123 \u20ac";
     server.requestHandler(req -> {
       switch (req.path()) {
@@ -4383,6 +4618,7 @@ public abstract class HttpTest extends HttpTestBase {
 
   @Test
   public void testEventHandlersNotHoldingLock() throws Exception {
+    log.info("..... context: " + vertx.getOrCreateContext());
     waitFor(2);
     server.requestHandler(req -> {
       HttpConnection conn = req.connection();
@@ -4470,6 +4706,7 @@ public abstract class HttpTest extends HttpTestBase {
 
   @Test
   public void testEventHandlersNotHoldingLockOnClose() throws Exception {
+    log.info("..... context: " + vertx.getOrCreateContext());
     waitFor(7);
     server.requestHandler(req -> {
       HttpConnection conn = req.connection();
@@ -4517,6 +4754,7 @@ public abstract class HttpTest extends HttpTestBase {
 
   @Test
   public void testCloseHandlerWhenConnectionEnds() throws Exception {
+    log.info("..... context: " + vertx.getOrCreateContext());
     server.requestHandler(req -> {
       req.response().closeHandler(v -> {
         testComplete();
@@ -4536,6 +4774,7 @@ public abstract class HttpTest extends HttpTestBase {
 
   @Test
   public void testUseResponseAfterClose() throws Exception {
+    log.info("..... context: " + vertx.getOrCreateContext());
     testAfterServerResponseClose(resp -> {
       Buffer buff = Buffer.buffer();
       resp.drainHandler(noOpHandler());
@@ -4562,6 +4801,7 @@ public abstract class HttpTest extends HttpTestBase {
 
   @Test
   public void testSendFileAfterServerResponseClose() throws Exception {
+    log.info("..... context: " + vertx.getOrCreateContext());
     testAfterServerResponseClose(resp -> {
       resp.sendFile("webroot/somefile.html");
       testComplete();
@@ -4570,6 +4810,7 @@ public abstract class HttpTest extends HttpTestBase {
 
   @Test
   public void testSendFileAsyncAfterServerResponseClose() throws Exception {
+    log.info("..... context: " + vertx.getOrCreateContext());
     testAfterServerResponseClose(resp -> {
       resp.sendFile("webroot/somefile.html", onFailure(err -> {
         testComplete();
@@ -4626,7 +4867,7 @@ public abstract class HttpTest extends HttpTestBase {
 
   private TestLoggerFactory testLogging() throws Exception {
     return TestUtils.testLogging(() -> {
-       try {
+      try {
         server.requestHandler(req -> {
           req.response().end();
         });
@@ -4635,14 +4876,15 @@ public abstract class HttpTest extends HttpTestBase {
           testComplete();
         });
         await();
-       } catch (Exception e) {
-         throw new RuntimeException(e);
-       }
+      } catch (Exception e) {
+        throw new RuntimeException(e);
+      }
     });
   }
 
   @Test
   public void testClientDecompressionError() throws Exception {
+    log.info("..... context: " + vertx.getOrCreateContext());
     waitFor(2);
     server.requestHandler(req -> {
       req.response()
@@ -4684,6 +4926,7 @@ public abstract class HttpTest extends HttpTestBase {
 
   @Test
   public void testContainsValueString() {
+    log.info("..... context: " + vertx.getOrCreateContext());
     server.requestHandler(req -> {
       assertTrue(req.headers().contains("Foo", "foo", false));
       assertFalse(req.headers().contains("Foo", "fOo", false));
@@ -4704,6 +4947,7 @@ public abstract class HttpTest extends HttpTestBase {
 
   @Test
   public void testContainsValueStringIgnoreCase() {
+    log.info("..... context: " + vertx.getOrCreateContext());
     server.requestHandler(req -> {
       assertTrue(req.headers().contains("Foo", "foo", true));
       assertTrue(req.headers().contains("Foo", "fOo", true));
@@ -4725,6 +4969,7 @@ public abstract class HttpTest extends HttpTestBase {
 
   @Test
   public void testContainsValueCharSequence() {
+    log.info("..... context: " + vertx.getOrCreateContext());
     CharSequence Foo = HttpHeaders.createOptimized("Foo");
     CharSequence foo = HttpHeaders.createOptimized("foo");
     CharSequence fOo = HttpHeaders.createOptimized("fOo");
@@ -4753,6 +4998,7 @@ public abstract class HttpTest extends HttpTestBase {
 
   @Test
   public void testContainsValueCharSequenceIgnoreCase() {
+    log.info("..... context: " + vertx.getOrCreateContext());
     CharSequence Foo = HttpHeaders.createOptimized("Foo");
     CharSequence foo = HttpHeaders.createOptimized("foo");
     CharSequence fOo = HttpHeaders.createOptimized("fOo");
@@ -4782,6 +5028,7 @@ public abstract class HttpTest extends HttpTestBase {
 
   @Test
   public void testBytesReadRequest() throws Exception {
+    log.info("..... context: " + vertx.getOrCreateContext());
     int length = 2048;
     Buffer expected = Buffer.buffer(TestUtils.randomAlphaString(length));;
     server.requestHandler(req -> {
@@ -4805,6 +5052,7 @@ public abstract class HttpTest extends HttpTestBase {
 
   @Test
   public void testClientSynchronousConnectFailures() {
+    log.info("..... context: " + vertx.getOrCreateContext());
     System.setProperty("vertx.disableDnsResolver", "true");
     Vertx vertx = Vertx.vertx(new VertxOptions().setAddressResolverOptions(new AddressResolverOptions().setQueryTimeout(100)));
     try {
@@ -4834,6 +5082,7 @@ public abstract class HttpTest extends HttpTestBase {
 
   @Test
   public void testClientConnectInvalidPort() {
+    log.info("..... context: " + vertx.getOrCreateContext());
     try {
       client.request(HttpMethod.GET, testAddress, -1, DEFAULT_HTTP_HOST, DEFAULT_TEST_URI)
         .setHandler(onSuccess(resp -> {}));
@@ -4868,6 +5117,7 @@ public abstract class HttpTest extends HttpTestBase {
 
   @Test
   public void testHttpClientRequestHeadersDontContainCROrLF() throws Exception {
+    log.info("..... context: " + vertx.getOrCreateContext());
     server.requestHandler(req -> {
       req.headers().forEach(header -> {
         String name = header.getKey();
@@ -4906,6 +5156,7 @@ public abstract class HttpTest extends HttpTestBase {
 
   @Test
   public void testHttpServerResponseHeadersDontContainCROrLF() throws Exception {
+    log.info("..... context: " + vertx.getOrCreateContext());
     server.requestHandler(req -> {
       List<BiConsumer<String, String>> list = Arrays.asList(
         req.response()::putHeader,
@@ -4941,6 +5192,7 @@ public abstract class HttpTest extends HttpTestBase {
 
   @Test
   public void testDisableIdleTimeoutInPool() throws Exception {
+    log.info("..... context: " + vertx.getOrCreateContext());
     server.requestHandler(req -> {
       req.response().end();
     });
@@ -4970,6 +5222,7 @@ public abstract class HttpTest extends HttpTestBase {
 
   @Test
   public void testHttpConnect() {
+    log.info("..... context: " + vertx.getOrCreateContext());
     Buffer buffer = TestUtils.randomBuffer(128);
     Buffer received = Buffer.buffer();
     CompletableFuture<Void> closeSocket = new CompletableFuture<>();
@@ -5024,6 +5277,7 @@ public abstract class HttpTest extends HttpTestBase {
 
   @Test
   public void testClientNetSocketConnectSuccess() {
+    log.info("..... context: " + vertx.getOrCreateContext());
     waitFor(3);
 
     server.requestHandler(req -> {
@@ -5061,6 +5315,7 @@ public abstract class HttpTest extends HttpTestBase {
 
   @Test
   public void testClientNetSocketConnectReject() {
+    log.info("..... context: " + vertx.getOrCreateContext());
     waitFor(2);
 
     server.requestHandler(req -> {
@@ -5084,6 +5339,7 @@ public abstract class HttpTest extends HttpTestBase {
 
   @Test
   public void testClientNetSocketConnectFailure() {
+    log.info("..... context: " + vertx.getOrCreateContext());
     waitFor(2);
 
     server.requestHandler(req -> {
@@ -5106,11 +5362,13 @@ public abstract class HttpTest extends HttpTestBase {
 
   @Test
   public void testAccessNetSocketPendingResponseDataPaused() {
+    log.info("..... context: " + vertx.getOrCreateContext());
     testAccessNetSocketPendingResponseData(true);
   }
 
   @Test
   public void testAccessNetSocketPendingResponseDataNotPaused() {
+    log.info("..... context: " + vertx.getOrCreateContext());
     testAccessNetSocketPendingResponseData(false);
   }
 
@@ -5146,6 +5404,7 @@ public abstract class HttpTest extends HttpTestBase {
 
   @Test
   public void testServerNetSocketCloseWithHandler() {
+    log.info("..... context: " + vertx.getOrCreateContext());
     waitFor(3);
     server.requestHandler(req -> {
       NetSocket so = req.netSocket();
@@ -5170,6 +5429,7 @@ public abstract class HttpTest extends HttpTestBase {
 
   @Test
   public void testClientNetSocketCloseWithHandler() {
+    log.info("..... context: " + vertx.getOrCreateContext());
     waitFor(3);
     server.requestHandler(req -> {
       NetSocket so = req.netSocket();
@@ -5192,6 +5452,7 @@ public abstract class HttpTest extends HttpTestBase {
 
   @Test
   public void testHttpInvalidConnectResponseEnded() {
+    log.info("..... context: " + vertx.getOrCreateContext());
     waitFor(2);
     server.requestHandler(req -> {
       req.response().end();
@@ -5215,6 +5476,7 @@ public abstract class HttpTest extends HttpTestBase {
 
   @Test
   public void testHttpInvalidConnectResponseChunked() {
+    log.info("..... context: " + vertx.getOrCreateContext());
     waitFor(2);
     server.requestHandler(req -> {
       req.response().setChunked(true).write("some-chunk");
@@ -5239,6 +5501,7 @@ public abstract class HttpTest extends HttpTestBase {
 
   @Test
   public void testEndFromAnotherThread() throws Exception {
+    log.info("..... context: " + vertx.getOrCreateContext());
     waitFor(2);
     disableThreadChecks();
     server.requestHandler(req -> {
@@ -5262,11 +5525,13 @@ public abstract class HttpTest extends HttpTestBase {
 
   @Test
   public void testServerResponseWriteSuccess() throws Exception {
+    log.info("..... context: " + vertx.getOrCreateContext());
     testServerResponseWriteSuccess((resp, handler) -> resp.write(TestUtils.randomBuffer(1024), handler));
   }
 
   @Test
   public void testServerResponseEndSuccess() throws Exception {
+    log.info("..... context: " + vertx.getOrCreateContext());
     testServerResponseWriteSuccess((resp, handler) -> resp.end(TestUtils.randomBuffer(1024), handler));
   }
 
@@ -5288,6 +5553,7 @@ public abstract class HttpTest extends HttpTestBase {
 
   @Test
   public void testServerResponseWriteFailure() throws Exception {
+    log.info("..... context: " + vertx.getOrCreateContext());
     server.requestHandler(req -> {
       HttpServerResponse resp = req.response();
       resp.setChunked(true);
@@ -5315,6 +5581,7 @@ public abstract class HttpTest extends HttpTestBase {
 
   @Test
   public void testClientRequestWriteSuccess() throws Exception {
+    log.info("..... context: " + vertx.getOrCreateContext());
     testClientRequestWriteSuccess((req, handler) -> {
       req.setChunked(true);
       req.write(TestUtils.randomBuffer(1024), handler);
@@ -5324,11 +5591,13 @@ public abstract class HttpTest extends HttpTestBase {
 
   @Test
   public void testClientRequestEnd1Success() throws Exception {
+    log.info("..... context: " + vertx.getOrCreateContext());
     testClientRequestWriteSuccess((req, handler) -> req.end(TestUtils.randomBuffer(1024), handler));
   }
 
   @Test
   public void testClientRequestEnd2Success() throws Exception {
+    log.info("..... context: " + vertx.getOrCreateContext());
     testClientRequestWriteSuccess(HttpClientRequest::end);
   }
 
@@ -5348,8 +5617,8 @@ public abstract class HttpTest extends HttpTestBase {
     startServer();
     HttpClientRequest req = client.request(HttpMethod.PUT, DEFAULT_HTTP_PORT, DEFAULT_HTTP_HOST, DEFAULT_TEST_URI)
       .setHandler(onSuccess(resp -> {
-      complete();
-    }));
+        complete();
+      }));
     op.accept(req, onSuccess(v -> {
       complete();
     }));
@@ -5358,11 +5627,13 @@ public abstract class HttpTest extends HttpTestBase {
 
   @Test
   public void testClientRequestLazyWriteSuccess() throws Exception {
+    log.info("..... context: " + vertx.getOrCreateContext());
     testClientRequestLazyWriteSuccess((resp, handler) -> resp.write(TestUtils.randomBuffer(1024), handler));
   }
 
   @Test
   public void testClientRequestLazyEndSuccess() throws Exception {
+    log.info("..... context: " + vertx.getOrCreateContext());
     testServerResponseWriteSuccess((resp, handler) -> resp.end(TestUtils.randomBuffer(1024), handler));
   }
 
@@ -5374,8 +5645,8 @@ public abstract class HttpTest extends HttpTestBase {
     startServer();
     HttpClientRequest req = client.request(HttpMethod.PUT, DEFAULT_HTTP_PORT, DEFAULT_HTTP_HOST, DEFAULT_TEST_URI)
       .setHandler(onSuccess(resp -> {
-      complete();
-    }))
+        complete();
+      }))
       .setChunked(true);
     op.accept(req, onSuccess(v -> {
       complete();
@@ -5385,6 +5656,7 @@ public abstract class HttpTest extends HttpTestBase {
 
   @Test
   public void testClientResponseWriteFailure() throws Exception {
+    log.info("..... context: " + vertx.getOrCreateContext());
     server.requestHandler(req -> {
       req.connection().close();
     });
@@ -5412,6 +5684,7 @@ public abstract class HttpTest extends HttpTestBase {
 
   @Test
   public void testServerRequestBodyFuture() throws Exception {
+    log.info("..... context: " + vertx.getOrCreateContext());
     Buffer expected = Buffer.buffer(TestUtils.randomAlphaString(1024));
     server.requestHandler(req -> {
       req.body(onSuccess(body -> {
@@ -5435,6 +5708,7 @@ public abstract class HttpTest extends HttpTestBase {
 
   @Test
   public void testServerRequestBodyFutureFail() throws Exception {
+    log.info("..... context: " + vertx.getOrCreateContext());
     Buffer expected = Buffer.buffer(TestUtils.randomAlphaString(1024));
     server.requestHandler(req -> {
       req.body(onFailure(err -> {
@@ -5461,6 +5735,7 @@ public abstract class HttpTest extends HttpTestBase {
 
   @Test
   public void testResetClientRequestBeforeActualSend() throws Exception {
+    log.info("..... context: " + vertx.getOrCreateContext());
     waitFor(2);
     server.requestHandler(req -> {
     });
@@ -5489,6 +5764,7 @@ public abstract class HttpTest extends HttpTestBase {
 
   @Test
   public void testResetClientRequestInProgress() throws Exception {
+    log.info("..... context: " + vertx.getOrCreateContext());
     waitFor(2);
     server.requestHandler(req -> {
     });
@@ -5516,6 +5792,7 @@ public abstract class HttpTest extends HttpTestBase {
 
   @Test
   public void testResetClientRequestAwaitingResponse() throws Exception {
+    log.info("..... context: " + vertx.getOrCreateContext());
     CompletableFuture<Void> fut = new CompletableFuture<>();
     server.requestHandler(req -> {
       fut.complete(null);
@@ -5547,6 +5824,7 @@ public abstract class HttpTest extends HttpTestBase {
 
   @Test
   public void testSimpleCookie() throws Exception {
+    log.info("..... context: " + vertx.getOrCreateContext());
     testCookies("foo=bar", req -> {
       assertEquals(1, req.cookieCount());
       Cookie cookie = req.getCookie("foo");
@@ -5559,6 +5837,7 @@ public abstract class HttpTest extends HttpTestBase {
 
   @Test
   public void testGetCookies() throws Exception {
+    log.info("..... context: " + vertx.getOrCreateContext());
     testCookies("foo=bar; wibble=blibble; plop=flop", req -> {
       assertEquals(3, req.cookieCount());
       Map<String, Cookie> cookies = req.cookieMap();
@@ -5583,6 +5862,7 @@ public abstract class HttpTest extends HttpTestBase {
 
   @Test
   public void testCookiesChanged() throws Exception {
+    log.info("..... context: " + vertx.getOrCreateContext());
     testCookies("foo=bar; wibble=blibble; plop=flop", req -> {
       assertEquals(3, req.cookieCount());
       assertEquals("bar", req.getCookie("foo").getValue());
@@ -5622,6 +5902,7 @@ public abstract class HttpTest extends HttpTestBase {
 
   @Test
   public void testCookieFields() throws Exception {
+    log.info("..... context: " + vertx.getOrCreateContext());
     Cookie cookie = Cookie.cookie("foo", "bar");
     assertEquals("foo", cookie.getName());
     assertEquals("bar", cookie.getValue());
@@ -5658,6 +5939,7 @@ public abstract class HttpTest extends HttpTestBase {
 
   @Test
   public void testCookieSameSiteFieldEncoding() throws Exception {
+    log.info("..... context: " + vertx.getOrCreateContext());
     Cookie cookie = Cookie.cookie("foo", "bar").setSameSite(CookieSameSite.LAX);
     assertEquals("foo", cookie.getName());
     assertEquals("bar", cookie.getValue());
@@ -5671,6 +5953,7 @@ public abstract class HttpTest extends HttpTestBase {
 
   @Test
   public void testCookieSameSiteFieldValidation() throws Exception {
+    log.info("..... context: " + vertx.getOrCreateContext());
     Cookie cookie = Cookie.cookie("foo", "bar");
 
     try {
@@ -5689,6 +5972,7 @@ public abstract class HttpTest extends HttpTestBase {
 
   @Test
   public void testRemoveCookies() throws Exception {
+    log.info("..... context: " + vertx.getOrCreateContext());
     testCookies("foo=bar", req -> {
       Cookie removed = req.response().removeCookie("foo");
       assertNotNull(removed);
@@ -5707,6 +5991,7 @@ public abstract class HttpTest extends HttpTestBase {
 
   @Test
   public void testNoCookiesRemoveCookie() throws Exception {
+    log.info("..... context: " + vertx.getOrCreateContext());
     testCookies(null, req -> {
       req.response().removeCookie("foo");
       req.response().end();
@@ -5718,6 +6003,7 @@ public abstract class HttpTest extends HttpTestBase {
 
   @Test
   public void testNoCookiesCookieCount() throws Exception {
+    log.info("..... context: " + vertx.getOrCreateContext());
     testCookies(null, req -> {
       assertEquals(0, req.cookieCount());
       req.response().end();
@@ -5729,6 +6015,7 @@ public abstract class HttpTest extends HttpTestBase {
 
   @Test
   public void testNoCookiesGetCookie() throws Exception {
+    log.info("..... context: " + vertx.getOrCreateContext());
     testCookies(null, req -> {
       assertNull(req.getCookie("foo"));
       req.response().end();
@@ -5740,6 +6027,7 @@ public abstract class HttpTest extends HttpTestBase {
 
   @Test
   public void testNoCookiesAddCookie() throws Exception {
+    log.info("..... context: " + vertx.getOrCreateContext());
     testCookies(null, req -> {
       assertEquals(req.response(), req.response().addCookie(Cookie.cookie("foo", "bar")));
       req.response().end();
@@ -5768,6 +6056,7 @@ public abstract class HttpTest extends HttpTestBase {
 
   @Test
   public void testClientRequestFutureSetHandlerFromAnotherThread() throws Exception {
+    log.info("..... context: " + vertx.getOrCreateContext());
     waitFor(2);
     server.requestHandler(req -> {
       req.response().end();
@@ -5803,11 +6092,13 @@ public abstract class HttpTest extends HttpTestBase {
 
   @Test
   public void testClientRequestWithLargeBodyInSmallChunks() throws Exception {
+    log.info("..... context: " + vertx.getOrCreateContext());
     testClientRequestWithLargeBodyInSmallChunks(false);
   }
 
   @Test
   public void testClientRequestWithLargeBodyInSmallChunksChunked() throws Exception {
+    log.info("..... context: " + vertx.getOrCreateContext());
     testClientRequestWithLargeBodyInSmallChunks(true);
   }
 
