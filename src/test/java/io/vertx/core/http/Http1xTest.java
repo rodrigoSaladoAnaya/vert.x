@@ -14,7 +14,6 @@ package io.vertx.core.http;
 import io.netty.handler.codec.TooLongFrameException;
 import io.vertx.core.*;
 import io.vertx.core.buffer.Buffer;
-import io.vertx.core.http.impl.Http1xUpgradeToH2CHandler;
 import io.vertx.core.http.impl.HttpServerImpl;
 import io.vertx.core.http.impl.HttpUtils;
 import io.vertx.core.impl.ConcurrentHashSet;
@@ -4778,7 +4777,7 @@ public class Http1xTest extends HttpTest {
 
   @Test
   public void testHttpServerWithIdleTimeoutSendChunkedFile() throws Exception {
-    // Does not pass reliably in CI (timeout)
+    // Does not pass reliably in CI (timeout) t1
     Assume.assumeFalse(vertx.isNativeTransportEnabled());
     int expected = 16 * 1024 * 1024; // We estimate this will take more than 200ms to transfer with a 1ms pause in chunks
     File sent = TestUtils.tmpFile(".dat", expected);
