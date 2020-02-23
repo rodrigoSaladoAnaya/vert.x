@@ -359,7 +359,8 @@ public abstract class ConnectionBase {
    * perform extra work when the idle event happens.
    */
   protected void handleIdle() {
-    chctx.close();
+    log.info("xxxxx 0.1) " + chctx);
+    //chctx.close();
   }
 
   protected abstract void handleInterestedOpsChanged();
