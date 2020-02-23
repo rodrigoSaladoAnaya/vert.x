@@ -4789,6 +4789,8 @@ public class Http1xTest extends HttpTest {
         req -> {
           req.response().sendFile(sent.getAbsolutePath());
         });
+
+    log.info("..... server " + server);
     startServer(testAddress);
     client.request(HttpMethod.GET, testAddress, DEFAULT_HTTP_PORT, DEFAULT_HTTP_HOST, "/")
       .setHandler(onSuccess(resp -> {
