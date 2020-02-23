@@ -181,6 +181,7 @@ public class Http2ServerRequestImpl extends Http2ServerStream implements HttpSer
       notify = !streamEnded;
     }
     if (notify) {
+      log.info("yyyyy ----> conn: " + conn);
       notifyException(new ClosedChannelException());
     }
     response.handleClose();
