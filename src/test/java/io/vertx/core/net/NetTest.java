@@ -901,7 +901,7 @@ public class NetTest extends VertxTestBase {
     assertNullPointerException(() -> client.connect(80, "localhost", (Handler<AsyncResult<NetSocket>>) null));
   }
 
-  /*@Test
+  @Test
   public void testListenInvalidPort() {
     final int port = 9090;
     final HttpServer httpServer = vertx.createHttpServer();
@@ -918,7 +918,7 @@ public class NetTest extends VertxTestBase {
     } finally {
       httpServer.close();
     }
-  }/**/
+  }
 
   @Test
   public void testListenInvalidHost() {

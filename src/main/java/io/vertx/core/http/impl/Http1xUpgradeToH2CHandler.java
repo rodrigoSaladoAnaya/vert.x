@@ -22,6 +22,8 @@ import io.netty.handler.codec.http2.*;
 import io.netty.handler.timeout.IdleState;
 import io.netty.handler.timeout.IdleStateEvent;
 import io.vertx.core.Handler;
+import io.vertx.core.impl.logging.Logger;
+import io.vertx.core.impl.logging.LoggerFactory;
 import io.vertx.core.net.impl.HandlerHolder;
 import io.vertx.core.net.impl.VertxHandler;
 
@@ -33,6 +35,8 @@ import static io.netty.handler.codec.http.HttpResponseStatus.SWITCHING_PROTOCOLS
 import static io.netty.handler.codec.http.HttpVersion.HTTP_1_1;
 
 class Http1xUpgradeToH2CHandler extends ChannelInboundHandlerAdapter {
+
+  private static final Logger log = LoggerFactory.getLogger(Http1xUpgradeToH2CHandler.class);
 
   private final HttpServerChannelInitializer initializer;
   private final HandlerHolder<? extends Handler<HttpServerConnection>> holder;
@@ -141,6 +145,7 @@ class Http1xUpgradeToH2CHandler extends ChannelInboundHandlerAdapter {
           }
         } else {
           // We might have left over buffer sent when removing the HTTP decoder that needs to be propagated to the HTTP handler
+          log.info("1) " + ctx + ", " + msg);
           super.channelRead(ctx, msg);
         }
       }

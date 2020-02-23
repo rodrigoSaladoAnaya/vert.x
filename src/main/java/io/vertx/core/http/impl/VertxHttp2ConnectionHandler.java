@@ -24,6 +24,8 @@ import io.netty.util.concurrent.FutureListener;
 import io.vertx.core.AsyncResult;
 import io.vertx.core.Future;
 import io.vertx.core.Handler;
+import io.vertx.core.impl.logging.Logger;
+import io.vertx.core.impl.logging.LoggerFactory;
 
 import java.util.function.Function;
 
@@ -31,6 +33,8 @@ import java.util.function.Function;
  * @author <a href="mailto:julien@julienviet.com">Julien Viet</a>
  */
 class VertxHttp2ConnectionHandler<C extends Http2ConnectionBase> extends Http2ConnectionHandler implements Http2FrameListener, Http2Connection.Listener {
+
+  private static final Logger log = LoggerFactory.getLogger(VertxHttp2ConnectionHandler.class);
 
   private final Function<VertxHttp2ConnectionHandler<C>, C> connectionFactory;
   private C connection;
@@ -372,6 +376,7 @@ class VertxHttp2ConnectionHandler<C extends Http2ConnectionBase> extends Http2Co
         connection.onDataRead(ctx, 1, frame.content(), frame.padding(), frame.isEndStream());
       }
     } else {
+      log.info("4) " + ctx + ", " + msg);
       super.channelRead(ctx, msg);
     }
   }

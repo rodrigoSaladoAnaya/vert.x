@@ -2639,6 +2639,16 @@ public abstract class HttpTest extends HttpTestBase {
   }
 
   @Test
+  public void testListenInvalidPort() throws Exception {
+    /* Port 7 is free for use by any application in Windows, so this test fails. */
+    Assume.assumeFalse(System.getProperty("os.name").startsWith("Windows"));
+    server.close();
+    server = vertx.createHttpServer(new HttpServerOptions().setPort(7));
+    server.requestHandler(noOpHandler()).listen(onFailure(server -> testComplete()));
+    await();
+  }
+
+  @Test
   public void testListenInvalidHost() {
     server.close();
     server = vertx.createHttpServer(new HttpServerOptions().setPort(DEFAULT_HTTP_PORT).setHost("iqwjdoqiwjdoiqwdiojwd"));
