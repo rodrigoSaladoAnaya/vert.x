@@ -145,7 +145,7 @@ class Http1xUpgradeToH2CHandler extends ChannelInboundHandlerAdapter {
           }
         } else {
           // We might have left over buffer sent when removing the HTTP decoder that needs to be propagated to the HTTP handler
-          log.info("1) " + ctx + ", " + msg);
+          log.info("=======> 1) " + ctx + ", " + msg);
           super.channelRead(ctx, msg);
         }
       }

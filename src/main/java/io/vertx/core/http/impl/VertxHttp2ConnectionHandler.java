@@ -376,7 +376,7 @@ class VertxHttp2ConnectionHandler<C extends Http2ConnectionBase> extends Http2Co
         connection.onDataRead(ctx, 1, frame.content(), frame.padding(), frame.isEndStream());
       }
     } else {
-      log.info("4) " + ctx + ", " + msg);
+      log.info("=======> 4) " + ctx + ", " + msg);
       super.channelRead(ctx, msg);
     }
   }
