@@ -124,7 +124,6 @@ public class Http2UpgradedClientConnection implements HttpClientConnection {
       class UpgradeRequestHandler extends ChannelInboundHandlerAdapter {
         @Override
         public void userEventTriggered(ChannelHandlerContext ctx, Object evt) throws Exception {
-          log.info("xxxxx 1) " + ctx + ", " + evt);
           super.userEventTriggered(ctx, evt);
           ChannelPipeline pipeline = ctx.pipeline();
           if (evt == HttpClientUpgradeHandler.UpgradeEvent.UPGRADE_SUCCESSFUL) {
@@ -143,7 +142,6 @@ public class Http2UpgradedClientConnection implements HttpClientConnection {
               resp.headers().set(HttpHeaderNames.CONNECTION, HttpHeaderValues.CLOSE);
             }
           }
-          log.info("=======> 2) " + ctx + ", " + msg);
           super.channelRead(ctx, msg);
         }
       }
@@ -217,7 +215,6 @@ public class Http2UpgradedClientConnection implements HttpClientConnection {
             }
             pending.add(msg);
           } else {
-            log.info("=======> 3) " + ctx + ", " + msg);
             super.channelRead(ctx, msg);
           }
         }
