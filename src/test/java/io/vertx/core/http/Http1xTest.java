@@ -633,12 +633,12 @@ public class Http1xTest extends HttpTest {
       .put("maxHeaderSize", maxHeaderSize)
       .put("maxWaitQueueSize", maxWaitQueueSize)
       .put("initialSettings", new JsonObject()
-        .put("pushEnabled", initialSettings.isPushEnabled())
-        .put("headerTableSize", initialSettings.getHeaderTableSize())
-        .put("maxHeaderListSize", initialSettings.getMaxHeaderListSize())
-        .put("maxConcurrentStreams", initialSettings.getMaxConcurrentStreams())
-        .put("initialWindowSize", initialSettings.getInitialWindowSize())
-        .put("maxFrameSize", initialSettings.getMaxFrameSize()))
+          .put("pushEnabled", initialSettings.isPushEnabled())
+          .put("headerTableSize", initialSettings.getHeaderTableSize())
+          .put("maxHeaderListSize", initialSettings.getMaxHeaderListSize())
+          .put("maxConcurrentStreams", initialSettings.getMaxConcurrentStreams())
+          .put("initialWindowSize", initialSettings.getInitialWindowSize())
+          .put("maxFrameSize", initialSettings.getMaxFrameSize()))
       .put("useAlpn", useAlpn)
       .put(sslEngine, new JsonObject())
       .put("alpnVersions", new JsonArray().add(alpnVersions.get(0).name()))
@@ -914,12 +914,12 @@ public class Http1xTest extends HttpTest {
       .put("maxHeaderSize", maxHeaderSize)
       .put("enabledProtocols", new JsonArray().add(enabledProtocol.name()))
       .put("initialSettings", new JsonObject()
-        .put("pushEnabled", initialSettings.isPushEnabled())
-        .put("headerTableSize", initialSettings.getHeaderTableSize())
-        .put("maxHeaderListSize", initialSettings.getMaxHeaderListSize())
-        .put("maxConcurrentStreams", initialSettings.getMaxConcurrentStreams())
-        .put("initialWindowSize", initialSettings.getInitialWindowSize())
-        .put("maxFrameSize", initialSettings.getMaxFrameSize()))
+          .put("pushEnabled", initialSettings.isPushEnabled())
+          .put("headerTableSize", initialSettings.getHeaderTableSize())
+          .put("maxHeaderListSize", initialSettings.getMaxHeaderListSize())
+          .put("maxConcurrentStreams", initialSettings.getMaxConcurrentStreams())
+          .put("initialWindowSize", initialSettings.getInitialWindowSize())
+          .put("maxFrameSize", initialSettings.getMaxFrameSize()))
       .put("useAlpn", useAlpn)
       .put("http2ConnectionWindowSize", http2ConnectionWindowSize)
       .put(sslEngine, new JsonObject())
@@ -1011,7 +1011,6 @@ public class Http1xTest extends HttpTest {
     int requests = 6;
     client.close();
     CountDownLatch firstCloseLatch = new CountDownLatch(1);
-    log.info("[close] testTimedOutWaiterDoesntConnect 1");
     server.close(onSuccess(v -> firstCloseLatch.countDown()));
     // Make sure server is closed before continuing
     awaitLatch(firstCloseLatch);
@@ -1074,8 +1073,7 @@ public class Http1xTest extends HttpTest {
     awaitLatch(latch);
 
     assertEquals("Incorrect number of connect attempts.", (requests + 1) / 2, requestCount.get());
-    log.info("[close] testTimedOutWaiterDoesntConnect 2");
-    closeServer(server);
+    server.close();
   }
 
   @Test
@@ -1135,14 +1133,14 @@ public class Http1xTest extends HttpTest {
     int requests = limit * 4;
     client.close();
     client = vertx.createHttpClient(new HttpClientOptions().
-      setKeepAlive(true).
-      setPipelining(true).
-      setPipeliningLimit(limit).
-      setMaxPoolSize(1));
+        setKeepAlive(true).
+        setPipelining(true).
+        setPipeliningLimit(limit).
+        setMaxPoolSize(1));
     AtomicInteger count = new AtomicInteger();
     String data = "GET /somepath HTTP/1.1\r\n" +
-      "host: localhost:8080\r\n" +
-      "\r\n";
+        "host: localhost:8080\r\n" +
+        "\r\n";
     NetServer server = vertx.createNetServer(new NetServerOptions().setPort(DEFAULT_HTTP_PORT).setHost(DEFAULT_HTTPS_HOST));
     server.connectHandler(so -> {
       StringBuilder total = new StringBuilder();
@@ -1410,7 +1408,6 @@ public class Http1xTest extends HttpTest {
   private void testKeepAlive(boolean keepAlive, int poolSize, int numServers, int expectedConnectedServers) throws Exception {
     client.close();
     CountDownLatch firstCloseLatch = new CountDownLatch(1);
-    log.info("[close] testKeepAlive");
     server.close(onSuccess(v -> firstCloseLatch.countDown()));
     // Make sure server is closed before continuing
     awaitLatch(firstCloseLatch);
@@ -1459,7 +1456,6 @@ public class Http1xTest extends HttpTest {
 
     CountDownLatch serverCloseLatch = new CountDownLatch(numServers);
     for (HttpServer server: servers) {
-      log.info("[close] testKeepAlive 2");
       server.close(onSuccess(s -> {
         serverCloseLatch.countDown();
       }));
@@ -1539,7 +1535,7 @@ public class Http1xTest extends HttpTest {
     client.close();
 
     client = vertx.createHttpClient(createBaseClientOptions().setDefaultHost(DEFAULT_HTTP_HOST).setDefaultPort(DEFAULT_HTTP_PORT)
-      .setPipelining(false).setMaxWaitQueueSize(0).setMaxPoolSize(2));
+        .setPipelining(false).setMaxWaitQueueSize(0).setMaxPoolSize(2));
 
     waitFor(3);
 
@@ -1603,9 +1599,8 @@ public class Http1xTest extends HttpTest {
   }
 
   @Test
-  public void testServerWebSocketIdleTimeout() throws Exception {
-    log.info("[close] testServerWebSocketIdleTimeout");
-    closeServer(server);
+  public void testServerWebSocketIdleTimeout() {
+    server.close();
     server = vertx.createHttpServer(createBaseServerOptions().setIdleTimeout(1).setPort(DEFAULT_HTTP_PORT).setHost(DEFAULT_HTTP_HOST));
     server.webSocketHandler(ws -> {}).listen(ar -> {
       assertTrue(ar.succeeded());
@@ -1633,8 +1628,7 @@ public class Http1xTest extends HttpTest {
   @Test
   public void testSharedServersRoundRobin() throws Exception {
     client.close();
-    log.info("[close] testSharedServersRoundRobin");
-    closeServer(server);
+    server.close();
     client = vertx.createHttpClient(createBaseClientOptions().setKeepAlive(false));
     int numServers = VertxOptions.DEFAULT_EVENT_LOOP_POOL_SIZE / 2- 1;
     int numRequests = numServers * 100;
@@ -1701,7 +1695,6 @@ public class Http1xTest extends HttpTest {
 
     for (HttpServer server : servers) {
       server.close(ar -> {
-        log.info("[close] testSharedServersRoundRobin 2");
         assertTrue(ar.succeeded());
         closeLatch.countDown();
       });
@@ -1736,9 +1729,7 @@ public class Http1xTest extends HttpTest {
     awaitLatch(latch);
 
     CountDownLatch closeLatch = new CountDownLatch(1);
-    log.info("[close] testSharedServersRoundRobinButFirstStartAndStopServer");
     theServer.close(ar -> {
-      log.info("[close] testSharedServersRoundRobinButFirstStartAndStopServer 2");
       assertTrue(ar.succeeded());
       closeLatch.countDown();
     });
@@ -1774,10 +1765,10 @@ public class Http1xTest extends HttpTest {
     AtomicBoolean a = new AtomicBoolean();
     HttpClientRequest req = client.request(HttpMethod.GET, testAddress, DEFAULT_HTTP_PORT, DEFAULT_HTTP_HOST, DEFAULT_TEST_URI)
       .setHandler(onFailure(err -> {
-        if (a.compareAndSet(false, true)) {
-          assertTrue("message " + err.getMessage() + " should contain HTTP/1.2", err.getMessage().contains("HTTP/1.2"));
-        }
-      }));
+      if (a.compareAndSet(false, true)) {
+        assertTrue("message " + err.getMessage() + " should contain HTTP/1.2", err.getMessage().contains("HTTP/1.2"));
+      }
+    }));
     client.connectionHandler(conn -> conn.closeHandler(v -> testComplete()));
     req.exceptionHandler(err -> {
       fail("Should not be called");
@@ -1895,8 +1886,7 @@ public class Http1xTest extends HttpTest {
   @Test
   public void testHttp10ResponseNonKeepAliveConnectionClosed() throws Exception {
     waitFor(3);
-    log.info("[close] testHttp10ResponseNonKeepAliveConnectionClosed");
-    closeServer(server);
+    server.close();
     NetServer server = vertx.createNetServer().connectHandler(so -> {
       StringBuilder request = new StringBuilder();
       so.handler(buff -> {
@@ -1973,9 +1963,8 @@ public class Http1xTest extends HttpTest {
   }
 
   @Test
-  public void testServerOptionsCopiedBeforeUse() throws InterruptedException {
-    log.info("[close] testServerOptionsCopiedBeforeUse");
-    closeServer(server);
+  public void testServerOptionsCopiedBeforeUse() {
+    server.close();
     HttpServerOptions options = new HttpServerOptions().setHost(DEFAULT_HTTP_HOST).setPort(DEFAULT_HTTP_PORT);
     HttpServer server = vertx.createHttpServer(options);
     // Now change something - but server should still listen at previous port
@@ -2158,10 +2147,8 @@ public class Http1xTest extends HttpTest {
       });
     }
     awaitLatch(latch2, 40, TimeUnit.SECONDS);
-    log.info("[close] testContexts");
     // Close should be in own context
     server.close(onSuccess(v -> {
-      log.info("[close] testContexts 2");
       ContextInternal closeContext = ((VertxInternal) vertx).getContext();
       assertFalse(contexts.contains(closeContext));
       assertNotSame(serverCtx, closeContext);
@@ -2368,15 +2355,15 @@ public class Http1xTest extends HttpTest {
     client = vertx.createHttpClient(createBaseClientOptions().setKeepAlive(true).setMaxPoolSize(1));
     client.request(HttpMethod.PUT, testAddress, DEFAULT_HTTP_PORT, DEFAULT_HTTP_HOST, DEFAULT_TEST_URI)
       .setHandler(onSuccess(resp -> {
-        assertEquals(200, resp.statusCode());
-        complete();
-      }))
+      assertEquals(200, resp.statusCode());
+      complete();
+    }))
       .end("1");
     client.request(HttpMethod.PUT, testAddress, DEFAULT_HTTP_PORT, DEFAULT_HTTP_HOST, DEFAULT_TEST_URI)
       .setHandler(onSuccess(resp -> {
-        assertEquals(200, resp.statusCode());
-        complete();
-      }))
+      assertEquals(200, resp.statusCode());
+      complete();
+    }))
       .end("2");
     await();
   }
@@ -2386,13 +2373,13 @@ public class Http1xTest extends HttpTest {
     int sendRequests = 100;
     AtomicInteger receivedRequests = new AtomicInteger();
     server.requestHandler(x -> {
-      x.response().end("hello");
-    })
+        x.response().end("hello");
+      })
       .listen(testAddress, r -> {
         if (r.succeeded()) {
           HttpClient client = vertx.createHttpClient(createBaseClientOptions()
-            .setKeepAlive(true)
-            .setPipelining(true)
+              .setKeepAlive(true)
+              .setPipelining(true)
           );
           IntStream.range(0, 5).forEach(i -> recursiveCall(client, receivedRequests, sendRequests));
         }
@@ -2531,25 +2518,24 @@ public class Http1xTest extends HttpTest {
   }
 
   @Test
-  public void testServerMaxInitialLineLength() throws InterruptedException {
+  public void testServerMaxInitialLineLength() {
     testServerMaxInitialLineLength(HttpServerOptions.DEFAULT_MAX_INITIAL_LINE_LENGTH);
   }
 
   @Test
-  public void testServerMaxInitialLineLengthOption() throws InterruptedException {
+  public void testServerMaxInitialLineLengthOption() {
     // 5017 = 5000 for longParam and 17 for the rest in the following line - "GET /?t=longParam HTTP/1.1"
     testServerMaxInitialLineLength(5017);
   }
 
-  private void testServerMaxInitialLineLength(int maxInitialLength) throws InterruptedException {
+  private void testServerMaxInitialLineLength(int maxInitialLength) {
     String longParam = TestUtils.randomAlphaString(5000);
-    log.info("[close] testServerMaxInitialLineLength");
-    closeServer(server);
+    server.close();
     server = vertx.createHttpServer(createBaseServerOptions().setMaxInitialLineLength(maxInitialLength))
       .requestHandler(req -> {
-        assertEquals(req.getParam("t"), longParam);
-        req.response().end();
-      }).listen(testAddress, onSuccess(res -> {
+      assertEquals(req.getParam("t"), longParam);
+      req.response().end();
+    }).listen(testAddress, onSuccess(res -> {
         vertx.createHttpClient()
           .request(HttpMethod.GET, testAddress, DEFAULT_HTTP_PORT, DEFAULT_HTTP_HOST, "/?t=" + longParam)
           .setHandler(
@@ -2565,25 +2551,25 @@ public class Http1xTest extends HttpTest {
               }
             }))
           .end();
-      }));
+    }));
     await();
   }
 
   @Test
-  public void testClientMaxInitialLineLengthOption() throws InterruptedException {
+  public void testClientMaxInitialLineLengthOption() {
 
     String longParam = TestUtils.randomAlphaString(5000);
     NetServer server = vertx.createNetServer();
 
     server.connectHandler(so -> {
       so.write("" +
-        "HTTP/1.1 200 OK\r\n" +
-        "Transfer-Encoding: chunked\r\n" +
-        "\r\n" +
-        "A; name=\"" + longParam + "\"\r\n" +
-        "0123456789\r\n" +
-        "0\r\n" +
-        "\r\n");
+          "HTTP/1.1 200 OK\r\n" +
+          "Transfer-Encoding: chunked\r\n" +
+          "\r\n" +
+          "A; name=\"" + longParam + "\"\r\n" +
+          "0123456789\r\n" +
+          "0\r\n" +
+          "\r\n");
     });
 
     // 5017 = 5000 for longParam and 17 for the rest in the following line - "GET /?t=longParam HTTP/1.1"
@@ -2601,8 +2587,7 @@ public class Http1xTest extends HttpTest {
       }));
       await();
     } finally {
-      log.info("[close] testClientMaxInitialLineLengthOption");
-      closeServer(server);
+      server.close();
     }
   }
 
@@ -2646,9 +2631,9 @@ public class Http1xTest extends HttpTest {
 
     vertx.createHttpServer(createBaseServerOptions().setMaxHeaderSize(maxHeaderSize))
       .requestHandler(req -> {
-        assertEquals(req.getHeader("t"), longHeader);
-        req.response().end();
-      }).listen(testAddress, onSuccess(res -> {
+      assertEquals(req.getHeader("t"), longHeader);
+      req.response().end();
+    }).listen(testAddress, onSuccess(res -> {
       vertx.createHttpClient(new HttpClientOptions())
         .request(HttpMethod.GET, testAddress, DEFAULT_HTTP_PORT, DEFAULT_HTTP_HOST, DEFAULT_TEST_URI).setHandler(
         onSuccess(resp -> {
@@ -2771,10 +2756,10 @@ public class Http1xTest extends HttpTest {
       socket.handler(RecordParser.newDelimited("\r\n\r\n", buffer -> {
         if (firstRequest.getAndSet(false)) {
           socket.write("HTTP/1.0 200 OK\r\n" + "Content-Type: text/plain\r\n" + "Content-Length: 4\r\n"
-            + "Connection: keep-alive\r\n" + "\r\n" + "xxx\n");
+              + "Connection: keep-alive\r\n" + "\r\n" + "xxx\n");
         } else {
           socket.write("HTTP/1.0 200 OK\r\n" + "Content-Type: text/plain\r\n" + "Content-Length: 1\r\n"
-            + "\r\n" + "\n");
+              + "\r\n" + "\n");
         }
       }));
     });
@@ -2790,10 +2775,10 @@ public class Http1xTest extends HttpTest {
       socket.handler(RecordParser.newDelimited("\r\n\r\n", buffer -> {
         if (firstRequest.getAndSet(false)) {
           socket.write("HTTP/1.0 200 OK\r\n" + "Content-Type: text/plain\r\n" + "Content-Length: 4\r\n"
-            + "Connection: keep-alive\r\n" + "\n" + "xxx\n");
+              + "Connection: keep-alive\r\n" + "\n" + "xxx\n");
         } else {
           socket.write("HTTP/1.0 200 OK\r\n" + "Content-Type: text/plain\r\n" + "Content-Length: 1\r\n"
-            + "\r\n" + "\n");
+              + "\r\n" + "\n");
           socket.close();
         }
       }));
@@ -2807,10 +2792,10 @@ public class Http1xTest extends HttpTest {
       socket.handler(RecordParser.newDelimited("\r\n\r\n", buffer -> {
         if (firstRequest.getAndSet(false)) {
           socket.write("HTTP/1.1 200 OK\r\n" + "Content-Type: text/plain\r\n" + "Content-Length: 4\r\n"
-            + "\r\n" + "xxx\n");
+              + "\r\n" + "xxx\n");
         } else {
           socket.write("HTTP/1.1 200 OK\r\n" + "Content-Type: text/plain\r\n" + "Content-Length: 1\r\n"
-            + "Connection: close\r\n" + "\r\n" + "\n");
+              + "Connection: close\r\n" + "\r\n" + "\n");
         }
       }));
     });
@@ -2823,10 +2808,10 @@ public class Http1xTest extends HttpTest {
       socket.handler(RecordParser.newDelimited("\r\n\r\n", buffer -> {
         if (firstRequest.getAndSet(false)) {
           socket.write("HTTP/1.1 200 OK\r\n" + "Content-Type: text/plain\r\n" + "Content-Length: 3\r\n"
-            + "\r\n" + "xxx");
+              + "\r\n" + "xxx");
         } else {
           socket.write("HTTP/1.1 200 OK\r\n" + "Content-Type: text/plain\r\n" + "Content-Length: 1\r\n"
-            + "Connection: close\r\n" + "\r\n" + "\n");
+              + "Connection: close\r\n" + "\r\n" + "\n");
           socket.close();
         }
       }));
@@ -2834,15 +2819,14 @@ public class Http1xTest extends HttpTest {
   }
 
   private void testConnectionClose(
-    Handler<HttpClientRequest> clientRequest,
-    Handler<NetSocket> connectHandler
+      Handler<HttpClientRequest> clientRequest,
+      Handler<NetSocket> connectHandler
   ) throws Exception {
     // Cannot reliably pass due to https://github.com/netty/netty/issues/9113
     Assume.assumeTrue(testAddress.isInetSocket());
 
     client.close();
-    log.info("[close] testConnectionClose");
-    closeServer(server);
+    server.close();
 
     NetServerOptions serverOptions = new NetServerOptions();
 
@@ -2858,9 +2842,9 @@ public class Http1xTest extends HttpTest {
     awaitLatch(serverLatch);
 
     HttpClientOptions clientOptions = new HttpClientOptions()
-      .setDefaultHost("localhost")
-      .setKeepAlive(true)
-      .setPipelining(false);
+        .setDefaultHost("localhost")
+        .setKeepAlive(true)
+        .setPipelining(false);
     client = vertx.createHttpClient(clientOptions);
 
     int requests = 11;
@@ -2949,32 +2933,31 @@ public class Http1xTest extends HttpTest {
     HttpClientRequest req = client.request(HttpMethod.GET, testAddress, DEFAULT_HTTP_PORT, DEFAULT_HTTP_HOST, "/first")
       .setHandler(onFailure(err -> {
 
-      }));
+    }));
     req.reset(0);
     CountDownLatch respLatch = new CountDownLatch(2);
     client.request(HttpMethod.GET, testAddress, DEFAULT_HTTP_PORT, DEFAULT_HTTP_HOST, "/second")
       .setHandler(onSuccess(resp -> {
-        assertEquals(200, resp.statusCode());
-        resp.endHandler(v -> {
-          respLatch.countDown();
-        });
-      }))
+      assertEquals(200, resp.statusCode());
+      resp.endHandler(v -> {
+        respLatch.countDown();
+      });
+    }))
       .exceptionHandler(this::fail)
       .end();
     client.request(HttpMethod.GET, testAddress, DEFAULT_HTTP_PORT, DEFAULT_HTTP_HOST, "/third")
       .setHandler(onSuccess(resp -> {
-        assertEquals(200, resp.statusCode());
-        resp.endHandler(v -> {
-          respLatch.countDown();
-        });
-      }))
+      assertEquals(200, resp.statusCode());
+      resp.endHandler(v -> {
+        respLatch.countDown();
+      });
+    }))
       .exceptionHandler(this::fail)
       .end();
     awaitLatch(doneLatch);
     assertEquals(Arrays.asList("/second", "/third"), responses);
     awaitLatch(respLatch);
-    log.info("[close] testRecyclePipelinedConnection");
-    closeServer(server);
+    server.close();
     assertEquals(1, connCount.get());
   }
 
@@ -3065,8 +3048,7 @@ public class Http1xTest extends HttpTest {
 
   @Test
   public void testContentDecompression() throws Exception {
-    log.info("[close] testContentDecompression");
-    closeServer(server);
+    server.close();
     server = vertx.createHttpServer(new HttpServerOptions().setPort(DEFAULT_HTTP_PORT).setDecompressionSupported(true));
     String expected = TestUtils.randomAlphaString(1000);
     byte[] dataGzipped = TestUtils.compressGzip(expected);
@@ -3106,8 +3088,7 @@ public class Http1xTest extends HttpTest {
 
   private void testResetClientRequestNotYetSent(boolean keepAlive, boolean pipelined) throws Exception {
     waitFor(2);
-    log.info("[close] testResetClientRequestNotYetSent");
-    closeServer(server);
+    server.close();
     NetServer server = vertx.createNetServer();
     try {
       AtomicInteger numReq = new AtomicInteger();
@@ -3119,8 +3100,8 @@ public class Http1xTest extends HttpTest {
           String content = sb.toString();
           if (content.startsWith("GET some-uri HTTP/1.1\r\n") && content.endsWith("\r\n\r\n")) {
             conn.write("HTTP/1.1 200 OK\r\n" +
-              "Content-Length: 0\r\n" +
-              "\r\n");
+                "Content-Length: 0\r\n" +
+                "\r\n");
             complete();
           }
         });
@@ -3150,16 +3131,14 @@ public class Http1xTest extends HttpTest {
       });
       await();
     } finally {
-      log.info("[close] testResetClientRequestNotYetSent 2");
-      closeServer(server);
+      server.close();
     }
   }
 
   @Test
   public void testResetKeepAliveClientRequest() throws Exception {
     waitFor(3);
-    log.info("[close] testResetKeepAliveClientRequest");
-    closeServer(server);
+    server.close();
     NetServer server = vertx.createNetServer();
     try {
       AtomicInteger count = new AtomicInteger();
@@ -3169,14 +3148,14 @@ public class Http1xTest extends HttpTest {
         so.handler(buff -> {
           total.appendBuffer(buff);
           if (total.toString().equals("GET /somepath HTTP/1.1\r\n" +
-            "host: localhost:8080\r\n" +
-            "\r\n")) {
+              "host: localhost:8080\r\n" +
+              "\r\n")) {
             so.write(
-              "HTTP/1.1 200 OK\r\n" +
-                "Content-Type: text/plain\r\n" +
-                "Content-Length: 11\r\n" +
-                "\r\n" +
-                "Hello world");
+                "HTTP/1.1 200 OK\r\n" +
+                    "Content-Type: text/plain\r\n" +
+                    "Content-Length: 11\r\n" +
+                    "\r\n" +
+                    "Hello world");
             so.closeHandler(v -> {
               complete();
             });
@@ -3209,8 +3188,7 @@ public class Http1xTest extends HttpTest {
       });
       await();
     } finally {
-      log.info("[close] testResetKeepAliveClientRequest 2");
-      closeServer(server);
+      server.close();
     }
   }
 
@@ -3218,8 +3196,7 @@ public class Http1xTest extends HttpTest {
   public void testResetPipelinedClientRequest() throws Exception {
     waitFor(2);
     CompletableFuture<Void> doReset = new CompletableFuture<>();
-    log.info("[close] testResetPipelinedClientRequest");
-    closeServer(server);
+    server.close();
     NetServer server = vertx.createNetServer();
     AtomicInteger count = new AtomicInteger();
     server.connectHandler(so -> {
@@ -3228,14 +3205,14 @@ public class Http1xTest extends HttpTest {
       so.handler(buff -> {
         total.appendBuffer(buff);
         if (total.toString().equals("GET /somepath HTTP/1.1\r\n" +
-          "host: localhost:8080\r\n" +
-          "\r\n" +
-          "POST /somepath HTTP/1.1\r\n" +
-          "host: localhost:8080\r\n" +
-          "\r\n")) {
+            "host: localhost:8080\r\n" +
+            "\r\n" +
+            "POST /somepath HTTP/1.1\r\n" +
+            "host: localhost:8080\r\n" +
+            "\r\n")) {
           doReset.complete(null);
           so.write(
-            "HTTP/1.1 200 OK\r\n" +
+              "HTTP/1.1 200 OK\r\n" +
               "Content-Type: text/plain\r\n" +
               "Content-Length: 11\r\n" +
               "\r\n" +
@@ -3275,8 +3252,7 @@ public class Http1xTest extends HttpTest {
       });
       await();
     } finally {
-      log.info("[close] testResetPipelinedClientRequest 2");
-      closeServer(server);
+      server.close();
     }
   }
 
@@ -3292,8 +3268,7 @@ public class Http1xTest extends HttpTest {
 
   private void testCloseTheConnectionAfterResetPersistentClientRequest(boolean pipelined) throws Exception {
     waitFor(2);
-    log.info("[close] testCloseTheConnectionAfterResetPersistentClientRequest");
-    closeServer(server);
+    server.close();
     NetServer server = vertx.createNetServer();
     try {
       AtomicInteger count = new AtomicInteger();
@@ -3305,8 +3280,8 @@ public class Http1xTest extends HttpTest {
             so.handler(buff -> {
               total.appendBuffer(buff);
               if (total.toString().equals("GET /somepath HTTP/1.1\r\n" +
-                "host: localhost:8080\r\n" +
-                "\r\n")) {
+                  "host: localhost:8080\r\n" +
+                  "\r\n")) {
                 so.closeHandler(v -> {
                   closed.set(true);
                 });
@@ -3317,14 +3292,14 @@ public class Http1xTest extends HttpTest {
             so.handler(buff -> {
               total.appendBuffer(buff);
               if (total.toString().equals("GET /somepath HTTP/1.1\r\n" +
-                "host: localhost:8080\r\n" +
-                "\r\n")) {
+                  "host: localhost:8080\r\n" +
+                  "\r\n")) {
                 so.write(
-                  "HTTP/1.1 200 OK\r\n" +
-                    "Content-Type: text/plain\r\n" +
-                    "Content-Length: 11\r\n" +
-                    "\r\n" +
-                    "Hello world");
+                    "HTTP/1.1 200 OK\r\n" +
+                        "Content-Type: text/plain\r\n" +
+                        "Content-Length: 11\r\n" +
+                        "\r\n" +
+                        "Hello world");
                 complete();
               }
             });
@@ -3379,8 +3354,7 @@ public class Http1xTest extends HttpTest {
       }
       await();
     } finally {
-      log.info("[close] testCloseTheConnectionAfterResetPersistentClientRequest 2");
-      closeServer(server);
+      server.close();
     }
   }
 
@@ -3396,8 +3370,7 @@ public class Http1xTest extends HttpTest {
 
   private void testCloseTheConnectionAfterResetPersistentClientResponse(boolean pipelined) throws Exception {
     waitFor(2);
-    log.info("[close] testCloseTheConnectionAfterResetPersistentClientResponse");
-    closeServer(server);
+    server.close();
     NetServer server = vertx.createNetServer();
     try {
       AtomicInteger count = new AtomicInteger();
@@ -3409,10 +3382,10 @@ public class Http1xTest extends HttpTest {
             so.handler(buff -> {
               total.appendBuffer(buff);
               if (total.toString().equals("GET /somepath HTTP/1.1\r\n" +
-                "host: localhost:8080\r\n" +
-                "\r\n")) {
+                  "host: localhost:8080\r\n" +
+                  "\r\n")) {
                 so.write(Buffer.buffer(
-                  "HTTP/1.1 200 OK\r\n" +
+                    "HTTP/1.1 200 OK\r\n" +
                     "Content-Length: 200\r\n" +
                     "\r\n" +
                     "Some-Buffer"
@@ -3427,14 +3400,14 @@ public class Http1xTest extends HttpTest {
             so.handler(buff -> {
               total.appendBuffer(buff);
               if (total.toString().equals("GET /somepath HTTP/1.1\r\n" +
-                "host: localhost:8080\r\n" +
-                "\r\n")) {
+                  "host: localhost:8080\r\n" +
+                  "\r\n")) {
                 so.write(
-                  "HTTP/1.1 200 OK\r\n" +
-                    "Content-Type: text/plain\r\n" +
-                    "Content-Length: 11\r\n" +
-                    "\r\n" +
-                    "Hello world");
+                    "HTTP/1.1 200 OK\r\n" +
+                        "Content-Type: text/plain\r\n" +
+                        "Content-Length: 11\r\n" +
+                        "\r\n" +
+                        "Hello world");
                 complete();
               }
             });
@@ -3455,21 +3428,21 @@ public class Http1xTest extends HttpTest {
       if (pipelined) {
         client.request(HttpMethod.GET, testAddress, DEFAULT_HTTP_PORT, DEFAULT_HTTP_HOST, "/somepath")
           .setHandler(
-            onSuccess(resp1 -> {
-              resp1.handler(buff -> {
-                // Since we pipeline we must be sure that the first request is closed before running a new one
-                resp1.request().connection().closeHandler(v -> {
-                  client.request(HttpMethod.GET, testAddress, DEFAULT_HTTP_PORT, DEFAULT_HTTP_HOST, "/somepath").setHandler(onSuccess(resp -> {
-                    assertEquals(200, resp.statusCode());
-                    resp.bodyHandler(body -> {
-                      assertEquals("Hello world", body.toString());
-                      complete();
-                    });
-                  })).end();
-                });
-                resp1.request().reset();
+          onSuccess(resp1 -> {
+            resp1.handler(buff -> {
+              // Since we pipeline we must be sure that the first request is closed before running a new one
+              resp1.request().connection().closeHandler(v -> {
+                client.request(HttpMethod.GET, testAddress, DEFAULT_HTTP_PORT, DEFAULT_HTTP_HOST, "/somepath").setHandler(onSuccess(resp -> {
+                  assertEquals(200, resp.statusCode());
+                  resp.bodyHandler(body -> {
+                    assertEquals("Hello world", body.toString());
+                    complete();
+                  });
+                })).end();
               });
-            })).end();
+              resp1.request().reset();
+            });
+          })).end();
       } else {
         client.request(HttpMethod.GET, testAddress, DEFAULT_HTTP_PORT, DEFAULT_HTTP_HOST, "/somepath").setHandler(
           onSuccess(resp -> {
@@ -3489,8 +3462,7 @@ public class Http1xTest extends HttpTest {
       }
       await();
     } finally {
-      log.info("[close] testCloseTheConnectionAfterResetPersistentClientResponse 2");
-      closeServer(server);
+      server.close();
     }
   }
 
@@ -3506,8 +3478,7 @@ public class Http1xTest extends HttpTest {
 
   private void testCloseTheConnectionAfterResetBeforeResponseReceived(boolean pipelined) throws Exception {
     waitFor(2);
-    log.info("[close] testCloseTheConnectionAfterResetBeforeResponseReceived");
-    closeServer(server);
+    server.close();
     NetServer server = vertx.createNetServer();
     CompletableFuture<Void> requestReceived = new CompletableFuture<>();
     CompletableFuture<Void> sendResponse = new CompletableFuture<>();
@@ -3521,8 +3492,8 @@ public class Http1xTest extends HttpTest {
             so.handler(buff -> {
               total.appendBuffer(buff);
               if (total.toString().equals("GET /1 HTTP/1.1\r\n" +
-                "host: localhost:8080\r\n" +
-                "\r\n")) {
+                  "host: localhost:8080\r\n" +
+                  "\r\n")) {
                 requestReceived.complete(null);
                 sendResponse.whenComplete((v, err) -> {
                   so.write(Buffer.buffer(
@@ -3542,14 +3513,14 @@ public class Http1xTest extends HttpTest {
             so.handler(buff -> {
               total.appendBuffer(buff);
               if (total.toString().equals("GET /2 HTTP/1.1\r\n" +
-                "host: localhost:8080\r\n" +
-                "\r\n")) {
+                  "host: localhost:8080\r\n" +
+                  "\r\n")) {
                 so.write(
-                  "HTTP/1.1 200 OK\r\n" +
-                    "Content-Type: text/plain\r\n" +
-                    "Content-Length: 11\r\n" +
-                    "\r\n" +
-                    "Hello world");
+                    "HTTP/1.1 200 OK\r\n" +
+                        "Content-Type: text/plain\r\n" +
+                        "Content-Length: 11\r\n" +
+                        "\r\n" +
+                        "Hello world");
                 complete();
               }
             });
@@ -3569,12 +3540,12 @@ public class Http1xTest extends HttpTest {
       client = vertx.createHttpClient(createBaseClientOptions().setMaxPoolSize(1).setPipelining(pipelined).setKeepAlive(true));
       HttpClientRequest req1 = client.request(HttpMethod.GET, testAddress, DEFAULT_HTTP_PORT, DEFAULT_HTTP_HOST, "/1")
         .setHandler(onFailure(err -> {
-          // We need a small delay before the server send the HTTP response
-          // so the stream is reset before the response is received by the client
-          vertx.setTimer(100, id -> {
-            sendResponse.complete(null);
-          });
-        }));
+        // We need a small delay before the server send the HTTP response
+        // so the stream is reset before the response is received by the client
+        vertx.setTimer(100, id -> {
+          sendResponse.complete(null);
+        });
+      }));
       requestReceived.thenAccept(v -> {
         req1.reset();
       });
@@ -3585,12 +3556,12 @@ public class Http1xTest extends HttpTest {
             conn.closeHandler(v2 -> {
               client.request(HttpMethod.GET, testAddress, DEFAULT_HTTP_PORT, DEFAULT_HTTP_HOST, "/2")
                 .setHandler(onSuccess(resp -> {
-                  assertEquals(200, resp.statusCode());
-                  resp.bodyHandler(body -> {
-                    assertEquals("Hello world", body.toString());
-                    complete();
-                  });
-                }))
+                assertEquals(200, resp.statusCode());
+                resp.bodyHandler(body -> {
+                  assertEquals("Hello world", body.toString());
+                  complete();
+                });
+              }))
                 .end();
             });
           }
@@ -3610,8 +3581,7 @@ public class Http1xTest extends HttpTest {
       }
       await();
     } finally {
-      log.info("[close] testCloseTheConnectionAfterResetBeforeResponseReceived 2");
-      closeServer(server);
+      server.close();
     }
   }
 
@@ -3764,18 +3734,18 @@ public class Http1xTest extends HttpTest {
           AtomicBoolean responseReceived = new AtomicBoolean();
           client.request(HttpMethod.GET, testAddress, DEFAULT_HTTP_PORT, DEFAULT_HTTP_HOST, DEFAULT_TEST_URI)
             .setHandler(resp -> {
-              try {
-                Thread.sleep(150);
-              } catch (InterruptedException e) {
-                fail(e);
-              }
-              responseReceived.set(true);
-              // Complete later, if some timeout tasks have been queued, this will be executed after
-              vertx.runOnContext(v -> complete());
-            })
+            try {
+              Thread.sleep(150);
+            } catch (InterruptedException e) {
+              fail(e);
+            }
+            responseReceived.set(true);
+            // Complete later, if some timeout tasks have been queued, this will be executed after
+            vertx.runOnContext(v -> complete());
+          })
             .exceptionHandler(err -> {
-              fail("Was not expecting to get a timeout after the response is received");
-            })
+            fail("Was not expecting to get a timeout after the response is received");
+          })
             .setTimeout(500)
             .end();
         }
@@ -3801,9 +3771,9 @@ public class Http1xTest extends HttpTest {
   public void testPerPeerPooling() throws Exception {
     client.close();
     client = vertx.createHttpClient(new HttpClientOptions()
-      .setMaxPoolSize(1)
-      .setKeepAlive(true)
-      .setPipelining(false));
+        .setMaxPoolSize(1)
+        .setKeepAlive(true)
+        .setPipelining(false));
     testPerXXXPooling((i, handler) -> client.request(HttpMethod.GET, DEFAULT_HTTP_PORT, DEFAULT_HTTP_HOST, "/somepath")
       .setHandler(handler)
       .setAuthority("host" + i + ":8080"), HttpServerRequest::host);
@@ -3813,12 +3783,12 @@ public class Http1xTest extends HttpTest {
   public void testPerPeerPoolingWithProxy() throws Exception {
     client.close();
     client = vertx.createHttpClient(new HttpClientOptions()
-      .setMaxPoolSize(1)
-      .setKeepAlive(true)
-      .setPipelining(false).setProxyOptions(new ProxyOptions()
-        .setType(ProxyType.HTTP)
-        .setHost(DEFAULT_HTTP_HOST)
-        .setPort(DEFAULT_HTTP_PORT)));
+        .setMaxPoolSize(1)
+        .setKeepAlive(true)
+        .setPipelining(false).setProxyOptions(new ProxyOptions()
+            .setType(ProxyType.HTTP)
+            .setHost(DEFAULT_HTTP_HOST)
+            .setPort(DEFAULT_HTTP_PORT)));
     testPerXXXPooling((i, handler) -> client.request(HttpMethod.GET, 80, "host" + i, "/somepath")
       .setHandler(handler), HttpServerRequest::host);
   }
@@ -3975,8 +3945,7 @@ public class Http1xTest extends HttpTest {
 
   @Test
   public void testIdleTimeoutWithPartialH2CRequest() throws Exception {
-    log.info("[close] testIdleTimeoutWithPartialH2CRequest");
-    closeServer(server);
+    server.close();
     server = vertx.createHttpServer(new HttpServerOptions()
       .setPort(DEFAULT_HTTP_PORT)
       .setHost(DEFAULT_HTTP_HOST)
@@ -3996,8 +3965,7 @@ public class Http1xTest extends HttpTest {
 
   @Test
   public void testIdleTimeoutInfiniteSkipOfControlCharactersState() throws Exception {
-    log.info("[close] testIdleTimeoutInfiniteSkipOfControlCharactersState");
-    closeServer(server);
+    server.close();
     server = vertx.createHttpServer(createBaseServerOptions().setIdleTimeout(1));
     server.requestHandler(req -> {
       testComplete();
@@ -4019,8 +3987,7 @@ public class Http1xTest extends HttpTest {
   @Test
   public void testCompressedResponseWithConnectionCloseAndNoCompressionHeader() throws Exception {
     Buffer expected = Buffer.buffer(TestUtils.randomAlphaString(2048));
-    log.info("[close] testCompressedResponseWithConnectionCloseAndNoCompressionHeader");
-    closeServer(server);
+    server.close();
     server = vertx.createHttpServer(createBaseServerOptions().setCompressionSupported(true));
     server.requestHandler(req -> {
       req.response().end(expected);
@@ -4244,14 +4211,14 @@ public class Http1xTest extends HttpTest {
       for (int i = 0;i < 2;i++) {
         client.request(HttpMethod.GET, testAddress, DEFAULT_HTTP_PORT, DEFAULT_HTTP_HOST, "/someuri")
           .setHandler(onSuccess(resp -> {
-            resp.endHandler(v1 -> {
-              // Use runOnContext to be sure the connections is put back in the pool
-              vertx.runOnContext(v2 -> {
-                connections.add(resp.request().connection());
-                latch.countDown();
-              });
+          resp.endHandler(v1 -> {
+            // Use runOnContext to be sure the connections is put back in the pool
+            vertx.runOnContext(v2 -> {
+              connections.add(resp.request().connection());
+              latch.countDown();
             });
-          }))
+          });
+        }))
           .end();
       }
     });
@@ -4334,8 +4301,8 @@ public class Http1xTest extends HttpTest {
     startServer(testAddress);
     HttpClientRequest post = client.request(HttpMethod.POST, testAddress, DEFAULT_HTTP_PORT, DEFAULT_HTTP_HOST, "/")
       .setHandler(onSuccess(res -> {
-        continuation.complete(null);
-      }));
+      continuation.complete(null);
+    }));
     post.setChunked(true);
     post.write(TestUtils.randomBuffer(10000));
     CountDownLatch latch = new CountDownLatch(1);
@@ -4548,8 +4515,8 @@ public class Http1xTest extends HttpTest {
       .end(TestUtils.randomAlphaString(1024));
     client.request(HttpMethod.GET, testAddress, DEFAULT_HTTP_PORT, DEFAULT_HTTP_HOST, "/")
       .setHandler(resp -> {
-        testComplete();
-      }).end();
+      testComplete();
+    }).end();
     await();
   }
 
@@ -4564,8 +4531,8 @@ public class Http1xTest extends HttpTest {
     client = vertx.createHttpClient(createBaseClientOptions().setPipelining(true).setMaxPoolSize(1).setKeepAlive(true));
     HttpClientRequest req = client.request(HttpMethod.GET, testAddress, DEFAULT_HTTP_PORT, DEFAULT_HTTP_HOST, "/")
       .setHandler(resp -> {
-        complete();
-      });
+      complete();
+    });
     req.sendHead();
     client.request(HttpMethod.GET, testAddress, DEFAULT_HTTP_PORT, DEFAULT_HTTP_HOST, "/")
       .setHandler(resp -> {
@@ -4806,12 +4773,11 @@ public class Http1xTest extends HttpTest {
 
   @Test
   public void testHttpServerWithIdleTimeoutSendChunkedFile() throws Exception {
-    // Does not pass reliably in CI (timeout) t1
+    // Does not pass reliably in CI (timeout)
     Assume.assumeFalse(vertx.isNativeTransportEnabled());
     int expected = 16 * 1024 * 1024; // We estimate this will take more than 200ms to transfer with a 1ms pause in chunks
     File sent = TestUtils.tmpFile(".dat", expected);
-    log.info("[close] testHttpServerWithIdleTimeoutSendChunkedFile");
-    //closeServer(server);
+    server.close();
     server = vertx
       .createHttpServer(createBaseServerOptions().setIdleTimeout(400).setIdleTimeoutUnit(TimeUnit.MILLISECONDS))
       .requestHandler(
@@ -4825,7 +4791,6 @@ public class Http1xTest extends HttpTest {
         int[] length = {0};
         resp.handler(buff -> {
           length[0] += buff.length();
-          //log.info("----> " + length[0] + ", " + ((HttpServerImpl) server).isClosed());
           resp.pause();
           vertx.setTimer(1, id -> {
             resp.resume();
