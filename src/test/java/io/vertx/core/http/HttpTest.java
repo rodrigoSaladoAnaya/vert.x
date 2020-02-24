@@ -2036,7 +2036,7 @@ public abstract class HttpTest extends HttpTestBase {
   @Test
   public void test100ContinueHandledAutomatically() {
     Buffer toSend = TestUtils.randomBuffer(1000);
-
+log.info("[close] test100ContinueHandledAutomatically");
     server.close();
     server = vertx.createHttpServer(createBaseServerOptions().setHandle100ContinueAutomatically(true));
 
@@ -2646,6 +2646,7 @@ public abstract class HttpTest extends HttpTestBase {
   public void testListenInvalidPort() throws Exception {
     /* Port 7 is free for use by any application in Windows, so this test fails. */
     Assume.assumeFalse(System.getProperty("os.name").startsWith("Windows"));
+    log.info("[close] testListenInvalidPort");
     server.close();
     server = vertx.createHttpServer(new HttpServerOptions().setPort(7));
     server.requestHandler(noOpHandler()).listen(onFailure(server -> testComplete()));
@@ -2654,6 +2655,7 @@ public abstract class HttpTest extends HttpTestBase {
 
   @Test
   public void testListenInvalidHost() {
+    log.info("[close] testListenInvalidHost");
     server.close();
     server = vertx.createHttpServer(new HttpServerOptions().setPort(DEFAULT_HTTP_PORT).setHost("iqwjdoqiwjdoiqwdiojwd"));
     server.requestHandler(noOpHandler());
@@ -3352,6 +3354,7 @@ public abstract class HttpTest extends HttpTestBase {
 
   private void testInVerticle(boolean worker) {
     client.close();
+    log.info("[close] testInVerticle");
     server.close();
     class MyVerticle extends AbstractVerticle {
       Context ctx;
@@ -3458,11 +3461,15 @@ public abstract class HttpTest extends HttpTestBase {
       assertTrue(Vertx.currentContext().isEventLoopContext());
       times.incrementAndGet();
     });
+    log.info("[close] testMultipleServerClose 1");
     server.close(ar1 -> {
+      log.info("[close] testMultipleServerClose 2");
       assertNull(stack.get());
       assertTrue(Vertx.currentContext().isEventLoopContext());
       server.close(ar2 -> {
+        log.info("[close] testMultipleServerClose 3");
         server.close(ar3 -> {
+          log.info("[close] testMultipleServerClose 4");
           assertEquals(1, times.get());
           testComplete();
         });
@@ -3567,6 +3574,7 @@ public abstract class HttpTest extends HttpTestBase {
 
   @Test
   public void testAbsoluteURIServer() {
+    log.info("[close] testAbsoluteURIServer");
     server.close();
     // Listen on all addresses
     server = vertx.createHttpServer(createBaseServerOptions().setHost("0.0.0.0"));
@@ -3746,6 +3754,7 @@ public abstract class HttpTest extends HttpTestBase {
 
   @Test
   public void testServerLogging() throws Exception {
+    log.info("[close] testServerLogging");
     server.close();
     server = vertx.createHttpServer(createBaseServerOptions().setLogActivity(true));
     TestLoggerFactory factory = testLogging();
