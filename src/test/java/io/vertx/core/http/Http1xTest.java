@@ -19,6 +19,8 @@ import io.vertx.core.http.impl.HttpUtils;
 import io.vertx.core.impl.ConcurrentHashSet;
 import io.vertx.core.impl.ContextInternal;
 import io.vertx.core.impl.VertxInternal;
+import io.vertx.core.impl.logging.Logger;
+import io.vertx.core.impl.logging.LoggerFactory;
 import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
 import io.vertx.core.net.*;
@@ -26,6 +28,7 @@ import io.vertx.core.parsetools.RecordParser;
 import io.vertx.core.streams.WriteStream;
 import io.vertx.test.core.Repeat;
 import io.vertx.test.core.CheckingSender;
+import io.vertx.test.core.VertxTestBase;
 import io.vertx.test.verticles.SimpleServer;
 import io.vertx.test.core.TestUtils;
 import org.junit.Assume;
@@ -53,6 +56,8 @@ import static io.vertx.test.core.TestUtils.*;
  * @author <a href="mailto:nscavell@redhat.com">Nick Scavelli</a>
  */
 public class Http1xTest extends HttpTest {
+
+  private static final Logger log = LoggerFactory.getLogger(Http1xTest.class);
 
   @Override
   protected VertxOptions getOptions() {
@@ -4775,11 +4780,12 @@ public class Http1xTest extends HttpTest {
   public void testHttpServerWithIdleTimeoutSendChunkedFile() throws Exception {
     // Does not pass reliably in CI (timeout) Z: 15
     Assume.assumeFalse(vertx.isNativeTransportEnabled());
-    int expected = 10 * 1024 * 1024; // We estimate this will take more than 200ms to transfer with a 1ms pause in chunks
+    int expected = 16 * 1024 * 1024; // We estimate this will take more than 200ms to transfer with a 1ms pause in chunks
     File sent = TestUtils.tmpFile(".dat", expected);
     server.close();
+    long t0 = System.currentTimeMillis();
     server = vertx
-      .createHttpServer(createBaseServerOptions().setIdleTimeout(600).setIdleTimeoutUnit(TimeUnit.MILLISECONDS))
+      .createHttpServer(createBaseServerOptions().setIdleTimeout(400).setIdleTimeoutUnit(TimeUnit.MILLISECONDS))
       .requestHandler(
         req -> {
           req.response().sendFile(sent.getAbsolutePath());
@@ -4791,6 +4797,7 @@ public class Http1xTest extends HttpTest {
         int[] length = {0};
         resp.handler(buff -> {
           length[0] += buff.length();
+          log.info("req time: " + (System.currentTimeMillis() - now) + ", test time: " + (System.currentTimeMillis() - t0));
           resp.pause();
           vertx.setTimer(1, id -> {
             resp.resume();
@@ -4801,10 +4808,12 @@ public class Http1xTest extends HttpTest {
           assertEquals(expected, length[0]);
           assertTrue(System.currentTimeMillis() - now > 1000);
           testComplete();
+          log.info("total req time: " + (System.currentTimeMillis() - now));
         });
       }))
       .end();
     await();
+    log.info("total test time: " + (System.currentTimeMillis() - t0));
   }
 
   @Test
