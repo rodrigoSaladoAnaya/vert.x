@@ -4803,7 +4803,9 @@ public class Http1xTest extends HttpTest {
             resp.resume();
           });
         });
-        resp.exceptionHandler(this::fail);
+        resp.exceptionHandler(error -> {
+          log.info("[TEST_END_WITH_ERROR] -> " + (System.currentTimeMillis() - t1));
+        });
         resp.endHandler(v -> {
           assertEquals(expected, length[0]);
           assertTrue(System.currentTimeMillis() - now > 1000);
