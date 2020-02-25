@@ -30,6 +30,8 @@ import io.vertx.core.http.HttpServerOptions;
 import io.vertx.core.http.impl.cgbystrom.FlashPolicyHandler;
 import io.vertx.core.impl.ContextInternal;
 import io.vertx.core.impl.VertxInternal;
+import io.vertx.core.impl.logging.Logger;
+import io.vertx.core.impl.logging.LoggerFactory;
 import io.vertx.core.net.impl.HandlerHolder;
 import io.vertx.core.net.impl.SSLHelper;
 import io.vertx.core.net.impl.SslHandshakeCompletionHandler;
@@ -45,6 +47,8 @@ import java.util.function.Function;
  *
  * @author <a href="mailto:julien@julienviet.com">Julien Viet</a>
  */public class HttpServerChannelInitializer extends ChannelInitializer<Channel> {
+
+  private static final Logger log = LoggerFactory.getLogger(HttpServerChannelInitializer.class);
 
   private final VertxInternal vertx;
   private final SSLHelper sslHelper;
@@ -73,6 +77,7 @@ import java.util.function.Function;
     this.disableH2C = disableH2C;
     this.connectionHandler = connectionHandler;
     this.errorHandler = errorHandler;
+    log.info("----> options.idle: " + options.getIdleTimeout());
   }
 
   @Override
@@ -109,6 +114,7 @@ import java.util.function.Function;
       } else {
         IdleStateHandler idle;
         if (options.getIdleTimeout() > 0) {
+          log.info("1) ...");
           pipeline.addLast("idle", idle = new IdleStateHandler(0, 0, options.getIdleTimeout(), options.getIdleTimeoutUnit()));
         } else {
           idle = null;
@@ -184,6 +190,7 @@ import java.util.function.Function;
 
   void configureHttp2(ChannelPipeline pipeline) {
     if (options.getIdleTimeout() > 0) {
+      log.info("2) ...");
       pipeline.addBefore("handler", "idle", new IdleStateHandler(0, 0, options.getIdleTimeout(), options.getIdleTimeoutUnit()));
     }
   }
@@ -230,6 +237,7 @@ import java.util.function.Function;
       pipeline.addLast("chunkedWriter", new ChunkedWriteHandler());       // For large file / sendfile support
     }
     if (options.getIdleTimeout() > 0) {
+      log.info("3) ...");
       pipeline.addLast("idle", new IdleStateHandler(0, 0, options.getIdleTimeout(), options.getIdleTimeoutUnit()));
     }
     if (disableH2C) {

@@ -4785,8 +4785,8 @@ public class Http1xTest extends HttpTest {
     File sent = TestUtils.tmpFile(".dat", expected);
     server.close();
     server = vertx
-      //.createHttpServer(createBaseServerOptions().setIdleTimeout(400).setIdleTimeoutUnit(TimeUnit.MILLISECONDS))
-      .createHttpServer()
+      .createHttpServer(createBaseServerOptions().setIdleTimeout(400).setIdleTimeoutUnit(TimeUnit.MILLISECONDS))
+      //.createHttpServer()
       .requestHandler(
         req -> {
           req.response().sendFile(sent.getAbsolutePath());
