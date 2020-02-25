@@ -4812,6 +4812,7 @@ public class Http1xTest extends HttpTest {
         });
       }))
       .end();
+    log.info("start await: " + (System.currentTimeMillis() - t0));
     await();
     log.info("total test time: " + (System.currentTimeMillis() - t0));
   }
