@@ -77,7 +77,6 @@ import java.util.function.Function;
     this.disableH2C = disableH2C;
     this.connectionHandler = connectionHandler;
     this.errorHandler = errorHandler;
-    log.info("----> options.idle: " + options.getIdleTimeout());
   }
 
   @Override
@@ -114,7 +113,6 @@ import java.util.function.Function;
       } else {
         IdleStateHandler idle;
         if (options.getIdleTimeout() > 0) {
-          log.info("1) ...");
           pipeline.addLast("idle", idle = new IdleStateHandler(0, 0, options.getIdleTimeout(), options.getIdleTimeoutUnit()));
         } else {
           idle = null;
@@ -190,7 +188,6 @@ import java.util.function.Function;
 
   void configureHttp2(ChannelPipeline pipeline) {
     if (options.getIdleTimeout() > 0) {
-      log.info("2) ...");
       pipeline.addBefore("handler", "idle", new IdleStateHandler(0, 0, options.getIdleTimeout(), options.getIdleTimeoutUnit()));
     }
   }
@@ -237,7 +234,6 @@ import java.util.function.Function;
       pipeline.addLast("chunkedWriter", new ChunkedWriteHandler());       // For large file / sendfile support
     }
     if (options.getIdleTimeout() > 0) {
-      log.info("3) ...");
       pipeline.addLast("idle", new IdleStateHandler(0, 0, options.getIdleTimeout(), options.getIdleTimeoutUnit()));
     }
     if (disableH2C) {
