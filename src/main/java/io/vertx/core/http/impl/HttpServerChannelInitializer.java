@@ -30,8 +30,6 @@ import io.vertx.core.http.HttpServerOptions;
 import io.vertx.core.http.impl.cgbystrom.FlashPolicyHandler;
 import io.vertx.core.impl.ContextInternal;
 import io.vertx.core.impl.VertxInternal;
-import io.vertx.core.impl.logging.Logger;
-import io.vertx.core.impl.logging.LoggerFactory;
 import io.vertx.core.net.impl.HandlerHolder;
 import io.vertx.core.net.impl.SSLHelper;
 import io.vertx.core.net.impl.SslHandshakeCompletionHandler;
@@ -47,8 +45,6 @@ import java.util.function.Function;
  *
  * @author <a href="mailto:julien@julienviet.com">Julien Viet</a>
  */public class HttpServerChannelInitializer extends ChannelInitializer<Channel> {
-
-  private static final Logger log = LoggerFactory.getLogger(HttpServerChannelInitializer.class);
 
   private final VertxInternal vertx;
   private final SSLHelper sslHelper;
