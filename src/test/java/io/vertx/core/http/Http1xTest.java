@@ -4785,6 +4785,7 @@ public class Http1xTest extends HttpTest {
     server.close();
     long t0 = System.currentTimeMillis();
     server = vertx
+      //.createHttpServer(createBaseServerOptions().setIdleTimeout(219).setIdleTimeoutUnit(TimeUnit.MILLISECONDS))
       .createHttpServer(createBaseServerOptions().setIdleTimeout(400).setIdleTimeoutUnit(TimeUnit.MILLISECONDS))
       .requestHandler(
         req -> {
@@ -4797,13 +4798,16 @@ public class Http1xTest extends HttpTest {
         int[] length = {0};
         resp.handler(buff -> {
           length[0] += buff.length();
-          log.info("req time: " + (System.currentTimeMillis() - now) + ", test time: " + (System.currentTimeMillis() - t0));
+          //log.info("req time: " + (System.currentTimeMillis() - now) + ", test time: " + (System.currentTimeMillis() - t0));
           resp.pause();
           vertx.setTimer(1, id -> {
             resp.resume();
           });
         });
-        resp.exceptionHandler(this::fail);
+        resp.exceptionHandler(cause -> {
+          log.error("throw exception: " + (System.currentTimeMillis() - now));
+          this.fail(cause);
+        });
         resp.endHandler(v -> {
           assertEquals(expected, length[0]);
           assertTrue(System.currentTimeMillis() - now > 1000);
